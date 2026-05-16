@@ -1,0 +1,40 @@
+Pour tester la mémoire persistante, il faut :
+
+ÉTAPE 1 : Première conversation (dis ton nom)
+json
+{
+  "query": "Je m'appelle Hinmdou Morsia Guitdam",
+  "session_id": "ma_session_unique_123"
+}
+📌 Note : tu choisis un nom de session, pas "string"
+
+ÉTAPE 2 : Note la réponse et garde le même session_id
+ÉTAPE 3 : Redémarre le serveur
+bash
+CTRL+C puis uvicorn backend.main:app --reload
+ÉTAPE 4 : Demande ton nom avec le MÊME session_id
+json
+{
+  "query": "Quel est mon nom ?",
+  "session_id": "ma_session_unique_123"   ← MÊME ID !
+}
+Ce que tu as fait (incorrect pour tester la persistance)
+Ce que tu as envoyé	Problème
+"session_id": "string"	C'est une nouvelle session à chaque fois
+Session différente du premier test	N'a pas accès à l'historique de l'ancienne
+Ce qu'il faut faire (test correct)
+bash
+# 1. Dis ton nom avec session_id PERSO
+curl -X POST http://localhost:8000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Je mappelle Hinmdou", "session_id": "alif_session"}'
+
+# 2. Redémarre le serveur (CTRL+C puis uvicorn...)
+
+# 3. Demande ton nom avec le MÊME session_id
+curl -X POST http://localhost:8000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Quel est mon nom?", "session_id": "alif_session"}'
+
+  # Relancer le serveur
+uvicorn backend.main:app --reload --port 8000

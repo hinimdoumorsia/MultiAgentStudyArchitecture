@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "academic_mas": "./backend/orchestrator.py:build_graph"
+  },
+  "env": ".env"
+}

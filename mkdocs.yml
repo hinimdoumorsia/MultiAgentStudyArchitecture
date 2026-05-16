@@ -1,0 +1,15 @@
+site_name: My Docs
+
+nav:
+  - Introduction: docs/introduction.md
+  - État de l’art: docs/etat_de_l_art.md
+  - Architecture globale: docs/architecture_globale.md
+  - Agents du système: docs/agents_du_systeme.md
+  - Architectures comparées: docs/architectures_comparees.md
+  - Mécanisme de routage intelligent: docs/mecanisme_routage_intelligent.md
+  - Mémoire et infrastructure: docs/memoire_et_infrastructure.md
+  - Implémentation: docs/implementation.md
+  - Expérimentation: docs/experimentation.md
+  - Analyse des résultats: docs/analyse_des_resultats.md
+  - Conclusion et perspectives: docs/conclusion_et_perspectives.md
+  - Livrables: docs/livrables.md

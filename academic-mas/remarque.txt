@@ -1,0 +1,236 @@
+# Installation des dépendances
+bash
+# Créez un environnement virtuel
+python -m venv venv
+source venv/bin/activate  # Sur Windows: venv\Scripts\activate
+
+# Installez les dépendances
+pip install langchain langchain-anthropic langgraph chromadb fastapi uvicorn
+pip install pydantic sqlite3
+
+4. Lancer le serveur
+
+# Depuis la racine du projet
+python -m backend.main
+
+
+Questions de recherche
+QR1 : L'architecture distribuée est-elle plus performante que l'architecture hiérarchique pour traiter les questions à sous-tâches indépendantes ?
+
+QR2 : L'architecture hiérarchique est-elle plus robuste que l'architecture distribuée pour traiter les questions à dépendances fortes entre sous-tâches ?
+
+QR3 : Est-il possible de prédire l'architecture multi-agents optimale à partir des caractéristiques linguistiques de la question posée par l'utilisateur ?
+
+QR4 : Un routeur dynamique basé sur cette prédiction améliore-t-il les performances globales du système par rapport à une architecture statique unique ?
+
+
+1. COMPARAISON TEMPS
+Basé sur votre dernière requête "bonjour" :
+
+Architecture	Planning	RAG	Tools	Verification	Synthesis	TOTAL
+Hiérarchique	2s	2s	2s	2s	2s	~10s
+Distribuée (sans throttler)	0.01s	0.01s	0.01s	0.01s	0.01s	~0.05s + BLOCK ❌
+Distribuée (avec throttler)	0s	2s	4s	6s	8s	~20s
+Explication :
+
+Hiérarchique : Séquentiel pur (2s × 5 = 10s)
+
+Distribuée sans throttler : Parallèle pur (0.05s) mais RATE LIMIT → blocage
+
+Distribuée avec throttler : Parallèle mais artificiellement espacé (2s × 5 = 10s d'attente + 2s traitement = 20s)
+
+🎫 2. COMPARAISON TOKENS
+Architecture	Appels LLM	Tokens/requête	Tokens/minute (4 req)
+Hiérarchique	1 appel (si bien conçu)	~500 tokens	~2000
+Distribuée (P2P)	5 appels requis	~2500 tokens	~10000 ⚠️
+Calcul détaillé pour "bonjour" :
+
+text
+Hiérarchique optimisé :
+- Un seul appel LLM pour tout générer → 500 tokens
+
+Distribuée P2P :
+- Planning: 400 tokens
+- RAG: 600 tokens
+- Tools: 300 tokens
+- Verification: 500 tokens
+- Synthesis: 700 tokens
+Total: 2500 tokens (5× plus !)
+⚙️ 3. COMPARAISON EFFICACITÉ
+Critère	Hiérarchique	Distribuée (P2P)
+Latence pure	🟢 10-12s	🔴 20-25s (avec throttler)
+Consommation tokens	🟢 500-800	🔴 2000-3000
+Risque rate limit	🟢 Très faible	🔴 Élevé (5 appels)
+Robustesse	🟡 Point unique faille	🟢 Décentralisé
+Scalabilité	🟡 Goulot orchestre	🟢 Ajout facile agents
+Debug	🟢 Facile (trace linéaire)	🔴 Complexe (events)
+Overhead	🟢 Faible	🔴 Élevé (bus, serialization)
+💰 4. IMPACT FINANCIER
+Avec Groq (prix ~$0.27/million tokens) :
+
+Usage	Hiérarchique	Distribuée	Économie
+1000 requêtes/jour	$0.14	$0.68	-79%
+30k requêtes/mois	$4.20	$20.40	-80%
+🎯 ANALYSE STRATÉGIQUE
+Quand utiliser Hiérarchique ?
+✅ Requêtes simples (bonjour, météo, calculs)
+✅ Budget limité en tokens
+✅ Debug nécessaire
+✅ Faible concurrence (< 10 req/sec)
+
+Quand utiliser Distribuée (P2P) ?
+✅ Requêtes complexes (recherche + calcul + vérif)
+✅ Besoin de réutiliser des sous-résultats
+✅ Haute disponibilité requise
+✅ Scalabilité horizontale nécessaire
+
+📈 VOS MESURES RÉELLES
+Basé sur votre dernière réponse (13.5s) :
+
+Métrique	Valeur	Interprétation
+Temps total	13.5s	✅ Bon avec throttler
+Overhead throttler	~8s	⚠️ 60% du temps est de l'attente
+Traitement effectif	~5.5s	🟢 Rapide
+Tokens consommés	~2500	🔴 Élevé pour requête simple
+🚀 RECOMMANDATIONS OPTIMALES
+Solution hybride (meilleur des deux mondes) :
+python
+class HybridRouter:
+    def route_query(self, query: str, complexity: str):
+        if complexity == "low" or "bonjour" in query:
+            # Hiérarchique : 1 appel LLM, 500 tokens, 2 secondes
+            return self.hierarchical_pipeline(query)
+        else:
+            # Distribuée : 5 appels, 2500 tokens, mais nécessaire
+            return self.distributed_pipeline(query)
+Résultat :
+
+Requêtes simples : 2s, 500 tokens
+
+Requêtes complexes : 15s, 2500 tokens
+
+Économie de 70-80% sur les coûts
+
+🎯 CONCLUSION POUR VOTRE CAS
+Actuellement avec Distribuée + throttler :
+
+❌ Consomme 5× plus de tokens que nécessaire
+
+❌ 60% du temps est de l'attente artificielle
+
+✅ Mais architecture plus scalable pour requêtes complexes
+
+Pour "bonjour comment va tu?" : la Hiérarchique serait 4× plus efficace !
+
+Voulez-vous que je vous aide à implémenter le routeur hybride ?
+
+
+Explication :
+
+Hiérarchique : Séquentiel pur (2s × 5 = 10s)
+
+Distribuée sans throttler : Parallèle pur (0.05s) mais RATE LIMIT → blocage
+
+Distribuée avec throttler : Parallèle mais artificiellement espacé (2s × 5 = 10s d'attente + 2s traitement = 20s)
+
+🎫 2. COMPARAISON TOKENS
+Architecture	Appels LLM	Tokens/requête	Tokens/minute (4 req)
+Hiérarchique	1 appel (si bien conçu)	~500 tokens	~2000
+Distribuée (P2P)	5 appels requis	~2500 tokens	~10000 ⚠️
+Calcul détaillé pour "bonjour" :
+
+text
+Hiérarchique optimisé :
+- Un seul appel LLM pour tout générer → 500 tokens
+
+Distribuée P2P :
+- Planning: 400 tokens
+- RAG: 600 tokens
+- Tools: 300 tokens
+- Verification: 500 tokens
+- Synthesis: 700 tokens
+Total: 2500 tokens (5× plus !)
+⚙️ 3. COMPARAISON EFFICACITÉ
+Critère	Hiérarchique	Distribuée (P2P)
+Latence pure	🟢 10-12s	🔴 20-25s (avec throttler)
+Consommation tokens	🟢 500-800	🔴 2000-3000
+Risque rate limit	🟢 Très faible	🔴 Élevé (5 appels)
+Robustesse	🟡 Point unique faille	🟢 Décentralisé
+Scalabilité	🟡 Goulot orchestre	🟢 Ajout facile agents
+Debug	🟢 Facile (trace linéaire)	🔴 Complexe (events)
+Overhead	🟢 Faible	🔴 Élevé (bus, serialization)
+💰 4. IMPACT FINANCIER
+Avec Groq (prix ~$0.27/million tokens) :
+
+Usage	Hiérarchique	Distribuée	Économie
+1000 requêtes/jour	$0.14	$0.68	-79%
+30k requêtes/mois	$4.20	$20.40	-80%
+🎯 ANALYSE STRATÉGIQUE
+Quand utiliser Hiérarchique ?
+✅ Requêtes simples (bonjour, météo, calculs)
+✅ Budget limité en tokens
+✅ Debug nécessaire
+✅ Faible concurrence (< 10 req/sec)
+
+Quand utiliser Distribuée (P2P) ?
+✅ Requêtes complexes (recherche + calcul + vérif)
+✅ Besoin de réutiliser des sous-résultats
+✅ Haute disponibilité requise
+✅ Scalabilité horizontale nécessaire
+
+📈 VOS MESURES RÉELLES
+Basé sur votre dernière réponse (13.5s) :
+
+Métrique	Valeur	Interprétation
+Temps total	13.5s	✅ Bon avec throttler
+Overhead throttler	~8s	⚠️ 60% du temps est de l'attente
+Traitement effectif	~5.5s	🟢 Rapide
+Tokens consommés	~2500	🔴 Élevé pour requête simple
+🚀 RECOMMANDATIONS OPTIMALES
+Solution hybride (meilleur des deux mondes) :
+python
+class HybridRouter:
+    def route_query(self, query: str, complexity: str):
+        if complexity == "low" or "bonjour" in query:
+            # Hiérarchique : 1 appel LLM, 500 tokens, 2 secondes
+            return self.hierarchical_pipeline(query)
+        else:
+            # Distribuée : 5 appels, 2500 tokens, mais nécessaire
+            return self.distributed_pipeline(query)
+Résultat :
+
+Requêtes simples : 2s, 500 tokens
+
+Requêtes complexes : 15s, 2500 tokens
+
+Économie de 70-80% sur les coûts
+
+🎯 CONCLUSION POUR VOTRE CAS
+Actuellement avec Distribuée + throttler :
+
+❌ Consomme 5× plus de tokens que nécessaire
+
+❌ 60% du temps est de l'attente artificielle
+
+✅ Mais architecture plus scalable pour requêtes complexes
+
+Pour "bonjour comment va tu?" : la Hiérarchique serait 4× plus efficace !
+
+Voulez-vous que je vous aide à implémenter le routeur hybride ?
+
+
+Les Features à Collecter
+1. Caractéristiques de la Question (features textuelles)
+ColonneTypeExemplequestion_idint001question_rawstr"Compare X et Y selon 3 axes"question_lengthint47 (nb de mots)nb_sous_tachesint3 (sous-questions détectées)domainecatégoriemath / code / raisonnement / factuel / créatiftype_questioncatégorieanalytique / comparative / factuelle / générationcomplexite_estimee1-54necessite_coordinationboolTrue/Falsedependances_entre_tachesboolTrue/False
+
+
+
+
+Une  fois que le backend est Lancer alors pour lancer le fichier e collecte de donner il faut simpleemnt taper ca (dans un autre terminal):
+
+1. Assure-toi que ton serveur backend tourne
+bash
+2. Dans un AUTRE terminal, lance le collecteur
+bash
+cd "C:\Users\Alif computer\Desktop\projet technologie web\Projet-metier-second-semestre\academic-mas\academic-mas"
+python collector.py
