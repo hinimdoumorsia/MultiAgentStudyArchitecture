@@ -1,53 +1,83 @@
-# AcademiMAS — Orchestrateur Multi-Agents pour l'Assistance Académique
+# AcademiMAS — Étude Comparative d'Architectures Multi-Agents pour l'Assistance Académique
 
-> Architecture hiérarchique multi-agents construite avec **LangGraph**, **Claude (Anthropic)**, **ChromaDB** et **FastAPI**, avec une interface React moderne.
+> Système de recherche expérimental basé sur **LangGraph**, **Claude (Anthropic)** et **ChromaDB**, conçu pour mener une étude scientifique rigoureuse sur deux paradigmes d'architecture agentique : **hiérarchique** et **distribuée peer-to-peer**.
 
 ---
 
 ## Table des matières
 
-1. [Vue d'ensemble](#vue-densemble)
-2. [Architecture hiérarchique](#architecture-hiérarchique)
-3. [Les agents et leurs rôles](#les-agents-et-leurs-rôles)
-4. [Communication entre agents (A2A)](#communication-entre-agents-a2a)
-5. [Mémoire : session et persistante](#mémoire--session-et-persistante)
-6. [Serveur MCP](#serveur-mcp)
-7. [Routeur dynamique](#routeur-dynamique)
-8. [Scalabilité — ajouter / retirer un agent](#scalabilité--ajouter--retirer-un-agent)
-9. [Installation et lancement](#installation-et-lancement)
-10. [Structure du projet](#structure-du-projet)
-11. [Métriques et évaluation](#métriques-et-évaluation)
+1. [Objectif de recherche](#objectif-de-recherche)
+2. [Vue d'ensemble du système](#vue-densemble-du-système)
+3. [Architecture hiérarchique](#architecture-hiérarchique)
+4. [Architecture distribuée peer-to-peer](#architecture-distribuée-peer-to-peer)
+5. [Routeur méta-architectural (Meta-Router)](#routeur-méta-architectural-meta-router)
+6. [Les agents et leurs rôles](#les-agents-et-leurs-rôles)
+7. [Communication entre agents (A2A)](#communication-entre-agents-a2a)
+8. [Mémoire : session et persistante](#mémoire--session-et-persistante)
+9. [Serveur MCP](#serveur-mcp)
+10. [Scalabilité — ajouter / retirer un agent](#scalabilité--ajouter--retirer-un-agent)
+11. [Métriques et évaluation scientifique](#métriques-et-évaluation-scientifique)
+12. [Installation et lancement](#installation-et-lancement)
+13. [Structure du projet](#structure-du-projet)
 
 ---
 
-## Vue d'ensemble
+## Objectif de recherche
 
-AcademiMAS est un système multi-agents capable de répondre à des questions académiques complexes en décomposant le travail entre plusieurs agents spécialisés coordonnés par un orchestrateur central.
+AcademiMAS est avant tout un **banc d'essai scientifique**. Son but ultime est de produire un **article de recherche** répondant à la question suivante :
+
+> *Pour un ensemble de questions académiques données, quelle architecture multi-agents — hiérarchique centralisée ou distribuée peer-to-peer — produit les réponses les plus précises, les plus cohérentes et dans les délais les plus raisonnables ?*
+
+Pour répondre à cette question, le système implémente les deux architectures en parallèle et les soumet aux mêmes requêtes, collecte des métriques comparables (latence, score de confiance, qualité, taux d'échec), et expose un **routeur méta-architectural** capable de prédire dynamiquement quelle architecture est la mieux adaptée à chaque type de question.
+
+### Questions de recherche principales
+
+| # | Question | Métriques clés |
+|---|---|---|
+| Q1 | Quelle architecture offre la meilleure qualité de réponse ? | `confidence_score`, `quality_score` |
+| Q2 | Quelle architecture est la plus rapide sur des questions simples ? complexes ? | `total_latency_ms` par complexité |
+| Q3 | Quelle architecture est la plus robuste aux erreurs ? | `taux d'échec`, `errors` |
+| Q4 | Le routeur méta-architectural prédit-il correctement l'architecture optimale ? | `accuracy` du Meta-Router |
+| Q5 | Les patterns de routage sont-ils stables et reproductibles ? | variance sur N requêtes identiques |
+
+---
+
+## Vue d'ensemble du système
 
 ```
-Utilisateur → Orchestrateur → Routeur dynamique → Agents spécialisés → Synthèse → Réponse
+                    ┌─────────────────────┐
+                    │   Requête entrante   │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │    Meta-Router       │
+                    │  (prédit l'archi.)   │
+                    └──────┬──────┬───────┘
+                           │      │
+          ┌────────────────▼─┐  ┌─▼────────────────┐
+          │  Architecture    │  │  Architecture     │
+          │  Hiérarchique    │  │  Distribuée P2P   │
+          │  (LangGraph)     │  │  (EventBus)       │
+          └────────────────┬─┘  └─┬────────────────┘
+                           │      │
+                    ┌──────▼──────▼──────┐
+                    │  Réponse + Métriques│
+                    │  (stockage SQLite)  │
+                    └─────────────────────┘
 ```
 
-**Capacités** :
-- Décomposition automatique de questions complexes
-- Recherche vectorielle dans une base documentaire (RAG)
-- Exécution d'outils : calculs, code Python, Wikipedia
-- Vérification de cohérence et détection d'hallucinations
-- Mémoire de session + persistance inter-sessions
-- Interface de chat moderne avec visualisation du pipeline
+Les deux architectures partagent **les mêmes agents** (même logique métier, même code `process()`). Seule la **topologie de coordination** diffère. Cela garantit que les différences observées sont imputables à l'architecture, pas aux modèles ou aux prompts.
 
 ---
 
 ## Architecture hiérarchique
 
-Le système s'organise en **3 couches** :
+### Principe
+
+L'architecture hiérarchique repose sur un **orchestrateur central** (LangGraph `StateGraph`) qui contrôle explicitement le flux d'exécution des agents. Chaque décision — quel agent appeler, dans quel ordre, selon quelle condition — est prise par cet orchestrateur.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  COUCHE 0 — Interface utilisateur (React)                    │
-└────────────────────────┬────────────────────────────────────┘
-                         │ requête HTTP
-┌────────────────────────▼────────────────────────────────────┐
 │  COUCHE 1 — Orchestrateur (LangGraph StateGraph)             │
 │                                                              │
 │   ┌─────────────────┐    ┌──────────────────────────────┐   │
@@ -55,15 +85,6 @@ Le système s'organise en **3 couches** :
 │   │ central         │───▶│ Score confiance · Coût       │   │
 │   │ Coordination    │    │ Type requête · Charge ctx.   │   │
 │   └─────────────────┘    └──────────────────────────────┘   │
-│                                                              │
-│   ┌─────────────┐          ┌──────────────────────────┐     │
-│   │ Mémoire     │          │ Serveur MCP              │     │
-│   │ de session  │          │ (outils externes)        │     │
-│   └─────────────┘          └──────────────────────────┘     │
-│   ┌─────────────┐                                            │
-│   │ Mémoire     │                                            │
-│   │ persistante │                                            │
-│   └─────────────┘                                            │
 └─────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────────┐
@@ -73,12 +94,11 @@ Le système s'organise en **3 couches** :
 │  │ Planning   │ │ RAG        │ │ Tools    │ │Verification│  │
 │  │ Agent      │ │ Agent      │ │ Agent    │ │ Agent      │  │
 │  └────────────┘ └────────────┘ └──────────┘ └────────────┘  │
-│        ←─────────── Protocole A2A (état partagé) ──────────→ │
+│        ←─────────── État partagé AcademicState ─────────────→│
 └─────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────────┐
 │  COUCHE 3 — Synthèse finale                                  │
-│                                                              │
 │                  ┌──────────────┐                            │
 │                  │ Synthesis    │                            │
 │                  │ Agent        │                            │
@@ -86,43 +106,195 @@ Le système s'organise en **3 couches** :
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Pourquoi hiérarchique et non peer-to-peer ?**
+### Flux d'exécution
 
-| Critère | Hiérarchique ✓ | Peer-to-peer |
+```
+Requête → PlanningAgent → [RAGAgent] → [ToolsAgent] → [VerificationAgent] → SynthesisAgent → Réponse
+```
+
+Les crochets `[]` indiquent les agents activés conditionnellement par le routeur dynamique interne.
+
+### Caractéristiques
+
+| Propriété | Valeur |
+|---|---|
+| Coordinateur | Orchestrateur LangGraph centralisé |
+| Communication | État partagé `AcademicState` (TypedDict) |
+| Ordre d'exécution | Séquentiel, déterministe |
+| Décision de routage | Routeur interne basé sur patterns regex + heuristiques |
+| Reprise sur erreur | Point de contrôle unique (orchestrateur) |
+| Fichier principal | `backend/orchestrator.py` |
+
+### Avantages attendus (à valider empiriquement)
+
+- Traçabilité maximale : chaque décision est loggée
+- Cohérence garantie par le contrôle centralisé
+- Détection d'erreur simplifiée
+- Coût réduit grâce au routage sélectif
+
+---
+
+## Architecture distribuée peer-to-peer
+
+### Principe
+
+L'architecture distribuée supprime l'orchestrateur central. Les agents sont **autonomes** et réagissent à des **événements** publiés sur un bus partagé (`EventBus`). Chaque agent s'abonne aux événements qui le concernent et publie son résultat comme un nouvel événement.
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  EventBus (singleton thread-safe)                            │
+│                                                              │
+│  QUERY_RECEIVED ──▶ PlanningAgent ──▶ PLAN_CREATED           │
+│                                           │                  │
+│                           ┌───────────────┴──────────┐       │
+│                           ▼                          ▼       │
+│                       RAGAgent               ToolsAgent      │
+│                    DOCUMENTS_FOUND         TOOL_EXECUTED      │
+│                           │                          │       │
+│                           └───────────────┬──────────┘       │
+│                                           ▼                  │
+│                                  VerificationAgent           │
+│                                  VERIFICATION_DONE           │
+│                                           │                  │
+│                                           ▼                  │
+│                                    SynthesisAgent            │
+│                                    SYNTHESIS_DONE            │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Types d'événements
+
+| Événement | Émis par | Déclenche |
 |---|---|---|
-| Traçabilité | Flux centralisé, chaque décision loggée | Difficile à suivre |
-| Cohérence | L'orchestrateur garantit l'ordre | Risque de conflits |
-| Reprise sur erreur | Point de contrôle unique | Détection complexe |
-| Scalabilité | Ajout d'agent sans refactoring | Recâblage de tous les nœuds |
-| Coût | Routeur évite les appels inutiles | Tous les agents sollicités |
+| `QUERY_RECEIVED` | PeerToPeerRunner | PlanningAgent |
+| `PLAN_CREATED` | PlanningAgent | RAGAgent, ToolsAgent |
+| `DOCUMENTS_FOUND` | RAGAgent | ToolsAgent, VerificationAgent |
+| `TOOL_EXECUTED` | ToolsAgent | VerificationAgent |
+| `VERIFICATION_DONE` | VerificationAgent | SynthesisAgent |
+| `SYNTHESIS_DONE` | SynthesisAgent | (fin du pipeline) |
+| `ERROR` | N'importe quel agent | (débloque le wait) |
+
+### Composants clés
+
+#### EventBus (`backend/distributed/event_bus.py`)
+
+Bus d'événements thread-safe implémenté comme singleton. Il maintient :
+- Un registre de subscribers par type d'événement
+- Un état agrégé par session (accumulation des sorties de chaque agent)
+- Des `threading.Event` pour que le runner puisse attendre sans polling actif
+
+```python
+# Publier un événement
+bus.publish(Event(
+    type=EventType.PLAN_CREATED,
+    payload={"plan": "...", "user_query": "..."},
+    source="PlanningAgent",
+    session_id="session-xyz",
+))
+
+# S'abonner à un type d'événement
+bus.subscribe(EventType.PLAN_CREATED, my_callback)
+
+# Lire l'état agrégé d'une session
+state = bus.get_state("session-xyz")
+```
+
+#### DistributedAgentWrapper (`backend/distributed/distributed_agents.py`)
+
+Chaque agent existant est encapsulé dans un wrapper générique qui :
+1. S'abonne aux événements déclencheurs (`trigger_events`)
+2. Reconstruit un `AcademicState` complet depuis l'état du bus
+3. Appelle `agent.process(state)` **sans modification** de la logique métier
+4. Publie le résultat comme nouvel événement (`output_event`)
+
+```python
+class DistributedRAGAgent(DistributedAgentWrapper):
+    trigger_events = [EventType.PLAN_CREATED]
+    output_event   = EventType.DOCUMENTS_FOUND
+
+    def _extract_payload(self, result, state):
+        return {"retrieved_docs": result.get("retrieved_docs", "")}
+```
+
+Un mécanisme de **throttling** (délai minimum entre deux appels LLM pour la même session) est intégré pour respecter les rate limits de l'API Anthropic.
+
+#### PeerToPeerRunner (`backend/distributed/p2p_runner.py`)
+
+Point d'entrée du pipeline P2P. Il instancie les agents une seule fois, les enregistre sur le bus, publie `QUERY_RECEIVED`, puis attend `SYNTHESIS_DONE` (avec timeout de 180 secondes). Le format de retour est **identique** à celui de l'architecture hiérarchique pour faciliter la comparaison.
+
+### Caractéristiques
+
+| Propriété | Valeur |
+|---|---|
+| Coordinateur | Aucun — les agents réagissent aux événements |
+| Communication | EventBus publish/subscribe |
+| Ordre d'exécution | Réactif, parallèle possible selon le graphe d'événements |
+| Décision de routage | Implicite (topologie des abonnements) |
+| Reprise sur erreur | Publication d'un événement `ERROR` |
+| Fichier principal | `backend/distributed/p2p_runner.py` |
+
+### Avantages attendus (à valider empiriquement)
+
+- Découplage total entre agents
+- Parallélisme naturel (ex. RAGAgent et ToolsAgent déclenchés simultanément)
+- Extensibilité : ajouter un agent = s'abonner à un événement
+- Résilience : un agent défaillant n'arrête pas les autres
+
+---
+
+## Routeur méta-architectural (Meta-Router)
+
+### Rôle
+
+Le Meta-Router est le composant central de l'étude scientifique. Il analyse la requête entrante et **prédit quelle architecture** (hiérarchique ou P2P) est susceptible de produire la meilleure réponse, avant même d'exécuter quoi que ce soit.
+
+```
+Requête ──▶ Meta-Router ──▶ { "architecture": "hierarchical" | "p2p", "confidence": 0.87 }
+```
+
+### Signaux de décision
+
+| Signal | Description | Exemple |
+|---|---|---|
+| **Complexité estimée** | Nombre de sous-tâches détectées | Question multi-étapes → hiérarchique |
+| **Besoin de parallélisme** | Plusieurs sources indépendantes à consulter | Multi-recherche → P2P |
+| **Besoin de contrôle strict** | Calcul + vérification séquentielle requise | Preuve mathématique → hiérarchique |
+| **Latence cible** | Question simple où la rapidité prime | Question factuelle → P2P |
+| **Historique de performance** | Quelle architecture a mieux répondu à ce type | Données empiriques accumulées |
+
+### Mode d'évaluation scientifique
+
+En mode recherche, le Meta-Router peut être configuré pour **exécuter les deux architectures** sur chaque requête et comparer les résultats a posteriori. Cela permet de construire le jeu de données d'entraînement du routeur lui-même.
+
+```python
+# Mode comparaison (pour la collecte de données)
+result = meta_router.run_both(query, session_id)
+# → {
+#     "hierarchical": { "final_answer": "...", "confidence": 0.87, "latency_ms": 3200 },
+#     "p2p":          { "final_answer": "...", "confidence": 0.91, "latency_ms": 2100 },
+#     "winner":       "p2p",
+#     "delta_confidence": 0.04,
+#     "delta_latency_ms": 1100
+# }
+```
 
 ---
 
 ## Les agents et leurs rôles
 
+Les cinq agents suivants sont partagés par les deux architectures. Leur logique métier (`process()`) est identique.
+
 ### 1. PlanningAgent (`planning`)
 
-**Rôle** : Point d'entrée systématique. Analyse la question et produit un plan d'action structuré.
+**Rôle** : Analyse la question et produit un plan d'action structuré.
 
-**Ce qu'il fait** :
 - Décompose la question en sous-tâches ordonnées
 - Estime la complexité : `low` / `medium` / `high`
 - Détermine si RAG et/ou outils sont nécessaires
-- Influence le routeur via l'état partagé
 
-**Modèle** : `claude-3-5-haiku-20241022` (rapide, économique)
+**Modèle** : `claude-3-5-haiku-20241022`
 
-**Sortie** : `state["plan"]` — texte structuré Markdown
-
-**Exemple de sortie** :
-```
-Stratégie : Recherche + calcul combinés
-Complexité : medium
-Étapes :
-  1. Rechercher la définition du théorème de Bayes
-  2. Trouver un exemple concret dans les documents
-  3. Calculer un exemple numérique
-```
+**Sortie** : `state["plan"]`
 
 ---
 
@@ -130,19 +302,17 @@ Complexité : medium
 
 **Rôle** : Retrieval-Augmented Generation — recherche dans la base documentaire académique.
 
-**Ce qu'il fait** :
 - Requête vectorielle dans ChromaDB (cosine similarity)
-- Enrichit la requête avec le plan du PlanningAgent (A2A)
+- Enrichit la requête avec le plan du PlanningAgent
 - Retourne les passages les plus pertinents avec scores de similarité
-- Fallback sur les connaissances générales si aucun document indexé
 
 **Modèle** : `claude-3-5-haiku-20241022`
 
 **Stockage** : ChromaDB persistant (`./data/chroma_db`)
 
-**Sortie** : `state["retrieved_docs"]` — passages + sources + scores
+**Sortie** : `state["retrieved_docs"]`
 
-**Ajouter un document à la base** :
+**Ajouter un document** :
 ```python
 from backend.agents.registry import registry
 rag = registry.get("rag")
@@ -153,27 +323,13 @@ rag.add_document(content="...", source="Mon livre, p.42")
 
 ### 3. ToolsAgent (`tools`)
 
-**Rôle** : Exécution d'outils externes — calcul, code, recherche web.
+**Rôle** : Exécution d'outils externes.
 
-**Ce qu'il fait** :
-- Décide automatiquement quels outils utiliser (via LLM)
-- Exécute les outils de façon sécurisée (sandbox Python)
-- Intègre les outils MCP enregistrés dynamiquement
-
-**Outils disponibles** :
-
-| Outil | Description | Exemple |
-|---|---|---|
-| `calculator` | Expressions mathématiques | `"math.sqrt(144)"` |
-| `python_executor` | Code Python sandboxé | `"print(sum(range(10)))"` |
-| `wikipedia_search` | Résumés Wikipedia FR/EN | `"mécanique quantique"` |
-
-**Ajouter un outil dynamiquement** :
-```python
-from backend.agents.registry import registry
-tools_agent = registry.get("tools")
-tools_agent.register_tool("my_tool", my_function)
-```
+| Outil | Description |
+|---|---|
+| `calculator` | Expressions mathématiques |
+| `python_executor` | Code Python sandboxé |
+| `wikipedia_search` | Résumés Wikipedia FR/EN |
 
 **Modèle** : `claude-3-5-haiku-20241022`
 
@@ -183,25 +339,22 @@ tools_agent.register_tool("my_tool", my_function)
 
 ### 4. VerificationAgent (`verification`)
 
-**Rôle** : Gardien de la qualité. Lit toutes les sorties des agents précédents et évalue leur cohérence.
+**Rôle** : Gardien de la qualité — détecte incohérences et hallucinations potentielles.
 
-**Ce qu'il fait** :
-- Détecte les incohérences entre RAG et outils
-- Identifie les affirmations potentiellement halluccinées
 - Produit un score de confiance [0, 1]
 - Émet une recommandation : `PROCEED` / `RETRY` / `FALLBACK`
 
 **Modèle** : `claude-3-5-haiku-20241022`
 
-**Sortie** : `state["verification_report"]` — JSON structuré :
+**Sortie** : `state["verification_report"]`
+
 ```json
 {
   "confidence_score": 0.87,
   "consistency_check": "Cohérent",
   "potential_hallucinations": [],
   "recommendation": "PROCEED",
-  "quality_score": 0.85,
-  "verification_notes": "Sources cohérentes, calcul vérifié."
+  "quality_score": 0.85
 }
 ```
 
@@ -209,63 +362,50 @@ tools_agent.register_tool("my_tool", my_function)
 
 ### 5. SynthesisAgent (`synthesis`)
 
-**Rôle** : Agrégateur final. Combine toutes les sorties en une réponse académique structurée.
+**Rôle** : Agrégateur final — combine toutes les sorties en réponse académique structurée.
 
-**Ce qu'il fait** :
 - Intègre plan + docs RAG + résultats outils + rapport de vérification
-- Structure la réponse avec Markdown (titres, listes, code)
-- Adapte le ton académique (précis, rigoureux, pédagogique)
-- Signale les incertitudes si confidence < 60%
-- Bascule en mode FALLBACK si la vérification le recommande
+- Structure la réponse en Markdown académique
+- Bascule en mode FALLBACK si `confidence < 0.6`
 
 **Modèle** : `claude-3-5-sonnet-20241022` (plus puissant pour la synthèse)
 
-**Sortie** : `state["final_answer"]` — réponse Markdown finale
+**Sortie** : `state["final_answer"]`
 
 ---
 
 ## Communication entre agents (A2A)
 
-Les agents communiquent via l'**état partagé LangGraph** (`AcademicState`). C'est le cœur du protocole Agent-to-Agent (A2A) dans ce système.
+### Dans l'architecture hiérarchique
 
-### Flux de données
+Les agents communiquent via l'**état partagé LangGraph** (`AcademicState`).
 
 ```
-PlanningAgent → state["plan"] → RAGAgent (enrichit sa requête)
-                              → VerificationAgent (contexte)
-                              → SynthesisAgent (structure)
-
-RAGAgent      → state["retrieved_docs"] → VerificationAgent
-                                        → SynthesisAgent
-
-ToolsAgent    → state["tool_results"]   → VerificationAgent
-                                        → SynthesisAgent
-
+PlanningAgent → state["plan"] → RAGAgent, VerificationAgent, SynthesisAgent
+RAGAgent      → state["retrieved_docs"] → VerificationAgent, SynthesisAgent
+ToolsAgent    → state["tool_results"]   → VerificationAgent, SynthesisAgent
 VerificationAgent → state["verification_report"] → SynthesisAgent
 ```
 
-### Pourquoi l'état partagé ?
+### Dans l'architecture distribuée
 
-1. **Pas de couplage direct** : les agents ne se connaissent pas, ils lisent/écrivent l'état
-2. **Traçabilité complète** : chaque modification est loggée avec l'agent responsable
-3. **Reprise sur erreur** : si un agent échoue, l'état reste cohérent pour les suivants
-4. **Thread-safe** : LangGraph gère la concurrence via `Annotated` + `operator.add`
+Les agents communiquent via des **événements publiés sur l'EventBus**. L'état est reconstruit à partir de l'état agrégé du bus avant chaque appel à `process()`.
 
-### Structure de l'état
+### Structure de l'état partagé
 
 ```python
 class AcademicState(TypedDict):
-    messages: Annotated[List[BaseMessage], add_messages]  # historique
-    user_query: str                   # question originale
-    session_id: str                   # identifiant de session
-    router_decision: RouterDecision   # décision du routeur
-    plan: str                         # sortie PlanningAgent
-    retrieved_docs: str               # sortie RAGAgent
-    tool_results: str                 # sortie ToolsAgent
-    verification_report: Dict         # sortie VerificationAgent
-    final_answer: str                 # sortie SynthesisAgent
-    agent_results: List[AgentResult]  # métriques par agent
-    errors: List[str]                 # erreurs accumulées
+    messages: Annotated[List[BaseMessage], add_messages]
+    user_query: str
+    session_id: str
+    router_decision: RouterDecision
+    plan: str
+    retrieved_docs: str
+    tool_results: str
+    verification_report: Dict
+    final_answer: str
+    agent_results: List[AgentResult]
+    errors: List[str]
 ```
 
 ---
@@ -276,16 +416,14 @@ class AcademicState(TypedDict):
 
 - **Type** : In-memory Python dict
 - **Durée de vie** : durée du processus serveur
-- **Usage** : contexte des derniers tours de conversation
 - **Capacité** : 20 derniers tours par session
-- **Rôle dans l'architecture** : enrichit la requête envoyée au routeur pour maintenir la cohérence conversationnelle
+- **Usage** : maintenir la cohérence conversationnelle
 
 ### Mémoire persistante (`PersistentMemory`)
 
 - **Type** : SQLite (`./data/memory.db`)
 - **Durée de vie** : permanente (survit aux redémarrages)
-- **Usage** : historique complet, statistiques, analytics
-- **Schéma** :
+- **Usage** : historique complet, statistiques comparatives, données pour l'article
 
 ```sql
 CREATE TABLE conversations (
@@ -294,11 +432,12 @@ CREATE TABLE conversations (
     run_id       TEXT,
     query        TEXT,
     answer       TEXT,
-    agents_used  TEXT,   -- JSON array
+    agents_used  TEXT,
     confidence   REAL,
     latency_ms   REAL,
+    architecture TEXT,   -- "hierarchical" | "p2p"
     timestamp    TEXT,
-    metadata     TEXT    -- JSON object
+    metadata     TEXT
 );
 ```
 
@@ -306,12 +445,9 @@ CREATE TABLE conversations (
 ```python
 from backend.memory.memory_manager import memory_manager
 
-# Récupérer l'historique d'une session
 history = memory_manager.persistent.get_session_history("session-id", limit=10)
-
-# Statistiques globales
 stats = memory_manager.get_stats()
-# → {"total_conversations": 42, "avg_confidence": 0.84, ...}
+# → {"total_conversations": 42, "avg_confidence": 0.84, "avg_latency_ms": 3200}
 ```
 
 ---
@@ -350,41 +486,6 @@ mcp_server.register_tool(
 
 ---
 
-## Routeur dynamique
-
-Le routeur (`backend/utils/router.py`) sélectionne les agents à activer pour chaque requête.
-
-### Signaux de routage
-
-| Signal | Source | Impact |
-|---|---|---|
-| **Type de requête** | Patterns regex sur la question | Active RAG, Tools, ou les deux |
-| **Charge contextuelle** | Nombre de messages + longueur query | Évite la surcharge |
-| **Agents disponibles** | Registry en temps réel | Routing adaptatif |
-| **Complexité** | Nombre d'agents sélectionnés | Estimation coût |
-
-### Logique de décision
-
-```
-Question → contient mots de recherche ? → active RAG
-         → contient calcul/code ?        → active Tools
-         → plusieurs agents actifs ?     → active Verification
-         → toujours                      → Planning + Synthesis
-```
-
-### RouterDecision
-
-```python
-{
-    "selected_agents": ["planning", "rag", "tools", "verification", "synthesis"],
-    "reasoning": "recherche documentaire | calcul détecté | vérification multi-sources",
-    "estimated_complexity": "high",
-    "context_load": 0.12
-}
-```
-
----
-
 ## Scalabilité — ajouter / retirer un agent
 
 ### ✅ Ajouter un agent (3 étapes)
@@ -401,56 +502,81 @@ class MyAgent(BaseAgent):
     description = "Ce que fait mon agent."
 
     def process(self, state: AcademicState) -> dict:
-        # Lire l'état : state["user_query"], state["plan"], etc.
-        # Retourner une mise à jour partielle de l'état
         return {"tool_results": "Mon résultat"}
 ```
 
-**Étape 2** : Enregistrer dans le registry
+**Étape 2** : Enregistrer dans le registry (hiérarchique)
 
 ```python
-# Dans backend/main.py, à l'initialisation :
 from backend.agents.my_agent import MyAgent
 from backend.agents.registry import registry
 
 registry.register(MyAgent())
-orchestrator.rebuild_graph()  # hot-reload du graphe
-```
-
-**Étape 3** : (Optionnel) Ajouter des patterns au routeur
-
-```python
-# Dans backend/utils/router.py :
-MY_PATTERNS = re.compile(r'\b(mon|pattern|spécifique)\b', re.I)
-
-# Dans select_agents() :
-if "my_agent" in available and MY_PATTERNS.search(query):
-    selected.append("my_agent")
-```
-
-**C'est tout.** Aucun autre fichier à modifier.
-
----
-
-### ❌ Retirer un agent (1 étape)
-
-```python
-from backend.agents.registry import registry
-registry.unregister("my_agent")
 orchestrator.rebuild_graph()
 ```
 
-Le graphe se reconstruit sans cet agent. Les autres agents continuent de fonctionner.
+**Étape 3** : Créer le wrapper distribué (P2P)
+
+```python
+# backend/distributed/distributed_agents.py
+class DistributedMyAgent(DistributedAgentWrapper):
+    trigger_events = [EventType.PLAN_CREATED]
+    output_event   = EventType.TOOL_EXECUTED  # ou un nouvel EventType
+
+    def _extract_payload(self, result, state):
+        return {"tool_results": result.get("tool_results", "")}
+```
+
+### ❌ Retirer un agent
+
+```python
+# Hiérarchique
+registry.unregister("my_agent")
+orchestrator.rebuild_graph()
+
+# P2P : supprimer le wrapper du PeerToPeerRunner
+```
 
 ---
 
-### Pourquoi c'est scalable ?
+## Métriques et évaluation scientifique
 
-1. **Registry singleton** : source de vérité unique pour tous les agents
-2. **BaseAgent** : contrat commun — chaque agent est interchangeable
-3. **État typé** : `AcademicState` découple les agents (pas d'appels directs)
-4. **`rebuild_graph()`** : hot-reload sans redémarrer le serveur
-5. **Routeur dynamique** : s'adapte automatiquement aux agents disponibles
+### Métriques collectées par run
+
+| Métrique | Source | Description |
+|---|---|---|
+| `latency_ms` | Tous les agents | Temps d'exécution par agent |
+| `total_latency_ms` | Runner | Temps total de bout en bout |
+| `confidence_score` | VerificationAgent | Score global [0, 1] |
+| `quality_score` | VerificationAgent | Qualité perçue [0, 1] |
+| `consistency_check` | VerificationAgent | Cohérent / Partiel / Incohérent |
+| `architecture` | Runner | `"hierarchical"` ou `"p2p"` |
+| `tokens.total_tokens` | Tous les agents | Consommation totale de tokens |
+| `errors` | Runner | Liste des erreurs rencontrées |
+
+### Endpoint statistiques
+
+```
+GET /api/stats
+→ {
+    "total_conversations": 42,
+    "by_architecture": {
+      "hierarchical": { "count": 21, "avg_confidence": 0.84, "avg_latency_ms": 3200 },
+      "p2p":          { "count": 21, "avg_confidence": 0.87, "avg_latency_ms": 2700 }
+    },
+    "meta_router_accuracy": 0.76
+  }
+```
+
+### Protocole expérimental recommandé
+
+Pour construire un corpus d'évaluation robuste :
+
+1. **Catégoriser les questions** : factuelles, calculatoires, multi-sources, raisonnement complexe.
+2. **Exécuter chaque question N=10 fois** sur les deux architectures pour mesurer la variance.
+3. **Annoter manuellement** la qualité des réponses (ou utiliser un LLM-judge).
+4. **Calculer les deltas** : `Δconfidence`, `Δlatency`, `Δquality` par catégorie.
+5. **Entraîner le Meta-Router** sur ces données et mesurer son accuracy.
 
 ---
 
@@ -459,7 +585,6 @@ Le graphe se reconstruit sans cet agent. Les autres agents continuent de fonctio
 ### Prérequis
 
 - Python 3.10+
-- Node.js 18+
 - Clé API Anthropic
 
 ### Backend
@@ -480,17 +605,6 @@ python -m uvicorn backend.main:app --reload --port 8000
 Le serveur sera disponible sur `http://localhost:8000`.
 Documentation API interactive : `http://localhost:8000/docs`
 
-### Frontend
-
-```bash
-# Dans un second terminal
-cd frontend
-npm install
-npm run dev
-```
-
-L'interface sera disponible sur `http://localhost:3000`.
-
 ### Ajouter des documents à la base RAG
 
 ```bash
@@ -502,6 +616,25 @@ curl -X POST http://localhost:8000/api/documents \
   }'
 ```
 
+### Lancer une requête sur chaque architecture
+
+```bash
+# Architecture hiérarchique
+curl -X POST http://localhost:8000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Explique le théorème de Bayes avec un exemple.", "architecture": "hierarchical"}'
+
+# Architecture distribuée P2P
+curl -X POST http://localhost:8000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Explique le théorème de Bayes avec un exemple.", "architecture": "p2p"}'
+
+# Mode comparaison (les deux en parallèle)
+curl -X POST http://localhost:8000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Explique le théorème de Bayes avec un exemple.", "architecture": "compare"}'
+```
+
 ---
 
 ## Structure du projet
@@ -511,7 +644,7 @@ academic-mas/
 │
 ├── backend/
 │   ├── main.py                      # Serveur FastAPI
-│   ├── orchestrator.py              # LangGraph StateGraph
+│   ├── orchestrator.py              # LangGraph StateGraph (hiérarchique)
 │   ├── state.py                     # AcademicState (état partagé)
 │   │
 │   ├── agents/
@@ -524,6 +657,14 @@ academic-mas/
 │   │   ├── synthesis_agent.py       # Agent 5 : Synthèse finale
 │   │   └── example_custom_agent.py  # Template pour nouveaux agents
 │   │
+│   ├── distributed/                 # Architecture P2P
+│   │   ├── event_bus.py             # Bus d'événements thread-safe
+│   │   ├── distributed_agents.py    # Wrappers P2P des agents existants
+│   │   └── p2p_runner.py            # Point d'entrée du pipeline P2P
+│   │
+│   ├── meta_router/                 # Routeur méta-architectural
+│   │   └── meta_router.py           # Sélection hiérarchique vs P2P
+│   │
 │   ├── memory/
 │   │   └── memory_manager.py        # Session + persistante (SQLite)
 │   │
@@ -531,57 +672,16 @@ academic-mas/
 │   │   └── __init__.py              # Serveur MCP local
 │   │
 │   └── utils/
-│       └── router.py                # Routeur dynamique
-│
-├── frontend/
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── package.json
-│   └── src/
-│       ├── main.jsx                 # Point d'entrée React
-│       └── App.jsx                  # Interface complète
+│       └── router.py                # Routeur interne (hiérarchique)
 │
 ├── data/                            # Créé automatiquement
 │   ├── chroma_db/                   # Base vectorielle RAG
-│   └── memory.db                    # Historique SQLite
+│   └── memory.db                    # Historique SQLite (données de recherche)
 │
 ├── requirements.txt
 ├── .env.example
 └── README.md
 ```
-
----
-
-## Métriques et évaluation
-
-### Métriques collectées par run
-
-| Métrique | Agent | Description |
-|---|---|---|
-| `latency_ms` | Tous | Temps d'exécution par agent |
-| `confidence_score` | Verification | Score global [0, 1] |
-| `quality_score` | Verification | Qualité de la réponse [0, 1] |
-| `consistency_check` | Verification | Cohérent / Partiel / Incohérent |
-| `total_latency_ms` | Orchestrateur | Temps total de la requête |
-
-### Endpoint statistiques
-
-```
-GET /api/stats
-→ {
-    "total_conversations": 42,
-    "avg_confidence": 0.84,
-    "avg_latency_ms": 3200,
-    "total_sessions": 8
-  }
-```
-
-### Questions de recherche supportées
-
-1. **Architecture hiérarchique vs distribuée** : comparer les scores de confiance et latences
-2. **Signaux de routage** : analyser `router_decision.reasoning` par type de question
-3. **Stabilité** : mesurer `confidence_score` sur N requêtes du même type
-4. **Taux d'échec** : compter `agent_results[*].success == false`
 
 ---
 
