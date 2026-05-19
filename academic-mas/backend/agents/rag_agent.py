@@ -2,7 +2,7 @@
 RAGAgent — Couche 2, Agent 2
 
 Rôle : recherche vectorielle dans une base de documents académiques.
-Utilise ChromaDB (local, persistant) + Mistral Direct.
+Utilise ChromaDB (local, persistant) + Groq LLM.
 Protocole A2A : reçoit le plan de PlanningAgent via l'état partagé.
 """
 
@@ -11,7 +11,7 @@ import os
 import logging
 import time
 
-from mistralai import Mistral
+from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from backend.agents.base import BaseAgent
@@ -33,9 +33,14 @@ class RAGAgent(BaseAgent):
         "et retourne les passages les plus pertinents avec leur score de similarité."
     )
 
-    def __init__(self, model: str = "mistral-large-latest"):
-        # 🔥 Client Mistral DIRECT (pas OpenRouter)
-        self.llm = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))
+    def __init__(self, model: str = "llama-3.1-8b-instant"):
+        # 🔥 Utilisation de Groq (disponible et fonctionnel)
+        self.llm = ChatGroq(
+            model=model,
+            api_key=os.getenv("GROQ_API_KEY"),
+            temperature=0.1,
+            max_tokens=512
+        )
         self.model = model
         self._chroma = None
         self._collection = None
@@ -90,11 +95,15 @@ class RAGAgent(BaseAgent):
             ids=[doc_id or str(uuid.uuid4())],
         )
 
+    def _get_fallback_response(self, query: str) -> str:
+        """Réponse simple sans appel LLM (quand ChromaDB est indisponible)"""
+        return f"Je n'ai pas pu accéder à la base documentaire. Pour répondre à '{query}', veuillez vérifier que ChromaDB est correctement installé et que des documents sont indexés."
+
     def process(self, state: AcademicState) -> Dict[str, Any]:
         query = state["user_query"]
         plan = state.get("plan", "")
 
-        # 🔥 Gérer le cas où plan est None
+        # Gérer le cas où plan est None
         plan_text = plan if plan is not None else ""
 
         # Enrich query with plan context (A2A communication via state)
@@ -115,16 +124,11 @@ class RAGAgent(BaseAgent):
                 "Réponds en utilisant tes connaissances académiques générales."
             )
 
-        # 🔥 Appel direct à Mistral
+        # Appel à Groq
         response = None
         for attempt in range(3):
             try:
-                response = self.llm.chat.complete(
-                    model=self.model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.1,
-                    max_tokens=512
-                )
+                response = self.llm.invoke(prompt)
                 break
             except Exception as e:
                 logger.warning(f"[RAGAgent] Tentative {attempt+1}/3 échouée: {e}")
@@ -132,7 +136,7 @@ class RAGAgent(BaseAgent):
                     time.sleep(5)
                 else:
                     return {
-                        "retrieved_docs": "Je n'ai pas pu traiter cette demande. Veuillez réessayer.\n\n📚 **Sources :** Aucune source disponible",
+                        "retrieved_docs": self._get_fallback_response(query),
                         "tokens": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
                     }
 
@@ -141,23 +145,16 @@ class RAGAgent(BaseAgent):
             if docs else "\n\n📚 **Sources :** Connaissances générales (aucun document indexé)"
         )
 
-        # 🔥 AJOUT DES TOKENS
-        tokens_data = {}
-        if response and hasattr(response, 'usage'):
-            tokens_data = {
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
-                "total_tokens": response.usage.total_tokens
-            }
-        else:
-            tokens_data = {
-                "prompt_tokens": len(prompt) // 4,
-                "completion_tokens": len(response.choices[0].message.content) // 4 if response else 0,
-                "total_tokens": (len(prompt) + (len(response.choices[0].message.content) if response else 0)) // 4
-            }
+        # Calcul des tokens approximatif (Groq ne retourne pas toujours l'usage)
+        response_content = response.content if response else "Réponse non disponible"
+        tokens_data = {
+            "prompt_tokens": len(prompt) // 4,
+            "completion_tokens": len(response_content) // 4,
+            "total_tokens": (len(prompt) + len(response_content)) // 4
+        }
 
         return {
-            "retrieved_docs": (response.choices[0].message.content if response else "Réponse non disponible") + sources_info,
+            "retrieved_docs": response_content + sources_info,
             "tokens": tokens_data
         }
 

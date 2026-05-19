@@ -21,16 +21,16 @@ frontend/dist/
 .vscode/
 .idea/
 *.swp
-.env
-
-
 
 # Ignore routing datasets
 dataset_routing.csv
 dataset_routing.xlsx
 
-
 # Virtual environments
 academic-mas/env_collect/
 academic-mas/env_fastapi/
 academic-mas/env_studio/
+
+# Additional local virtual environments
+env_fastapi/
+env_fastapi_new/
