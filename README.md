@@ -611,7 +611,8 @@ Pour construire un corpus d'évaluation robuste :
 
 Clonez le dépôt GitHub :
 git clone https://github.com/hinimdoumorsia/Architecture-d-etude-multi-agents.git
-
+ remplacer le username :hinimdoumorsia par votre user name et donc vous aurez le projet chez vous en local.
+ 
 ### Prérequis
 
 - Python 3.10+
