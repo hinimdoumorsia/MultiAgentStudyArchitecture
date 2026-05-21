@@ -17,7 +17,7 @@ Les deux systèmes utilisent les mêmes modèles de langage (LLMs locaux et via 
 
 ---
 
-## 🔄 Agents communs aux deux architectures
+##  Agents communs aux deux architectures
 
 Les deux architectures étudiées reposent sur un ensemble **identique d’agents spécialisés**, afin de garantir une comparaison équitable et scientifiquement rigoureuse entre l’approche hiérarchique et l’approche distribuée.
 
