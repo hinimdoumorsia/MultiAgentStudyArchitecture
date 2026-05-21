@@ -607,6 +607,11 @@ Pour construire un corpus d'évaluation robuste :
 
 ## Installation et lancement
 
+## Installation et exécution
+
+Clonez le dépôt GitHub :
+git clone https://github.com/hinimdoumorsia/Architecture-d-etude-multi-agents.git
+
 ### Prérequis
 
 - Python 3.10+
