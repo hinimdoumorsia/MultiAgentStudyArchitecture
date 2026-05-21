@@ -703,6 +703,13 @@ academic-mas/
 │   ├── chroma_db/                   # Base vectorielle RAG
 │   └── memory.db                    # Historique SQLite (données de recherche)
 │
+├── data_collection/                            # collection de jeu de donnees
+│   ├── collector_dist.py                   # Base vectorielle RAG
+│   └── collector_hier.py # collecter els donenr architecture hierarchiques
+|   └── collector.py  #collecter les donnees directeemnt pour les deux architectures
+├── image/             #contient les differents images utiliser dans la docuemntation du projet et autre
+|
+├── models/             # contient le notebook de notre projet et aussi le meilleur models retenu aprés études 
 ├── requirements.txt
 ├── .env.example
 └── README.md
