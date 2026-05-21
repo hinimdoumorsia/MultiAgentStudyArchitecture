@@ -107,27 +107,17 @@ Ces données permettent d’évaluer les systèmes selon plusieurs dimensions : 
 
 AcademiMAS est avant tout un **banc d’essai scientifique**. Son objectif est de produire un **article de recherche** répondant à la question suivante :
 
-> *Pour un ensemble de questions académiques données, quelle architecture multi-agents — hiérarchique centralisée ou distribuée peer-to-peer — produit les réponses les plus précises, les plus cohérentes et dans les délais les plus raisonnables ?*
+> *Pour un ensemble de questions  données, quelle architecture multi-agents — hiérarchique  ou distribuée peer-to-peer — produit les réponses les plus précises, les plus cohérentes et dans les délais les plus raisonnables ?*
 
 Pour répondre à cette question, le système implémente **deux architectures uniquement** (hiérarchique et distribuée), exécutées en parallèle sur les mêmes requêtes afin de garantir une comparaison équitable. Les performances sont ensuite analysées à l’aide de métriques quantitatives et qualitatives.
 
-### **Questions de recherche principales**
-
-## 🎯 Objectif de recherche
-
-AcademiMAS est avant tout un **banc d’essai scientifique**. Son objectif est de produire un **article de recherche** répondant à la question suivante :
-
-> *Pour un ensemble de questions académiques données, quelle architecture multi-agents — hiérarchique centralisée ou distribuée peer-to-peer — produit les réponses les plus précises, les plus cohérentes et dans les délais les plus raisonnables ?*
-
-Pour répondre à cette question, le système implémente **deux architectures uniquement** (hiérarchique et distribuée), exécutées en parallèle sur les mêmes requêtes afin de garantir une comparaison équitable. Les performances sont ensuite analysées à l’aide de métriques quantitatives et qualitatives.
-
-###  **Question centrale de l’étude** ?
+###  **Question centrale de l’étude** ❓
 
 > *Peut-on prédire directement, à partir de la requête utilisateur, quelle architecture (hiérarchique ou distribuée) produira la meilleure réponse, en utilisant un modèle d’apprentissage supervisé ?*
 
 Cette question vise à évaluer la possibilité de construire un **modèle de routage intelligent** capable de sélectionner dynamiquement l’architecture optimale en fonction des caractéristiques de la requête.
 
-### Questions de recherche principales
+### **Questions de recherche principales**
 
 | # | Question | Métriques clés |
 |---|---|---|
@@ -136,7 +126,6 @@ Cette question vise à évaluer la possibilité de construire un **modèle de ro
 | Q3 | Quelle architecture est la plus robuste face aux erreurs ? | `taux_d_echec`, erreurs |
 | Q4 | Le routeur méta-architectural prédit-il correctement l’architecture optimale ? | `accuracy` du Meta-Router |
 | Q5 | Les décisions de routage sont-elles stables et reproductibles ? | variance sur N requêtes identiques |
----
 
 ## Vue d'ensemble du système
 
