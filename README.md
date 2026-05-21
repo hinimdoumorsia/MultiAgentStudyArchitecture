@@ -1,6 +1,35 @@
 # AcademiMAS — Étude Comparative d'Architectures Multi-Agents pour l'Assistance Académique
 
-> Système de recherche expérimental basé sur **LangGraph**, **Claude (Anthropic)** et **ChromaDB**, conçu pour mener une étude scientifique rigoureuse sur deux paradigmes d'architecture agentique : **hiérarchique** et **distribuée peer-to-peer**.
+> Plateforme expérimentale de recherche basée sur **LangGraph**, **LLMs locaux et distants**, et **ChromaDB**, développée dans le cadre d’une étude scientifique visant à comparer deux paradigmes d’architectures multi-agents : **hiérarchique** et **distribuée (peer-to-peer)**.
+
+---
+
+##  **Introduction**
+
+Dans le cadre de ce projet de recherche, nous avons conçu et implémenté deux architectures multi-agents complètes afin d’étudier leurs performances dans un contexte d’assistance académique intelligente.
+
+L’objectif est de réaliser une **étude expérimentale comparative rigoureuse** entre deux approches :
+
+- une architecture **hiérarchique**, pilotée par un orchestrateur central,
+- une architecture **distribuée**, basée sur la collaboration entre agents sans point de contrôle unique.
+
+Les deux systèmes utilisent les mêmes modèles de langage (LLMs locaux et via API), les mêmes prompts, ainsi que les mêmes agents afin de garantir une comparaison équitable et scientifique.
+
+---
+
+## 🔄 Agents communs aux deux architectures
+
+Les deux architectures étudiées reposent sur un ensemble **identique d’agents spécialisés**, afin de garantir une comparaison équitable et scientifiquement rigoureuse entre l’approche hiérarchique et l’approche distribuée.
+
+Les agents utilisés dans les deux systèmes sont :
+
+- **PlanningAgent**
+- **RAGAgent**
+- **ToolsAgent**
+- **VerificationAgent**
+- **SynthesisAgent**
+
+Ainsi, la différence entre les deux architectures ne réside pas dans les agents eux-mêmes, mais uniquement dans leur **mode d’orchestration et de coordination**. Cette conception permet d’isoler l’impact de l’architecture sur les performances globales du système.
 
 ---
 
