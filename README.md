@@ -264,39 +264,46 @@ Point d'entrée du pipeline P2P. Il instancie les agents une seule fois, les enr
 
 ### Rôle
 
-Le Meta-Router est le composant central de l'étude scientifique. Il analyse la requête entrante et **prédit quelle architecture** (hiérarchique ou P2P) est susceptible de produire la meilleure réponse, avant même d'exécuter quoi que ce soit.
+Le Meta-Router est le composant central de l’étude expérimentale.  
+Il analyse la requête utilisateur et **sélectionne automatiquement l’une des deux architectures disponibles** :
 
-```
-Requête ──▶ Meta-Router ──▶ { "architecture": "hierarchical" | "p2p", "confidence": 0.87 }
-```
+- **Hiérarchique**
+- **Distribuée (peer-to-peer)**
 
-### Signaux de décision
+afin de maximiser la qualité de la réponse, la cohérence et la performance globale du système.
 
-| Signal | Description | Exemple |
-|---|---|---|
-| **Complexité estimée** | Nombre de sous-tâches détectées | Question multi-étapes → hiérarchique |
-| **Besoin de parallélisme** | Plusieurs sources indépendantes à consulter | Multi-recherche → P2P |
-| **Besoin de contrôle strict** | Calcul + vérification séquentielle requise | Preuve mathématique → hiérarchique |
-| **Latence cible** | Question simple où la rapidité prime | Question factuelle → P2P |
-| **Historique de performance** | Quelle architecture a mieux répondu à ce type | Données empiriques accumulées |
-
-### Mode d'évaluation scientifique
-
-En mode recherche, le Meta-Router peut être configuré pour **exécuter les deux architectures** sur chaque requête et comparer les résultats a posteriori. Cela permet de construire le jeu de données d'entraînement du routeur lui-même.
-
-```python
-# Mode comparaison (pour la collecte de données)
-result = meta_router.run_both(query, session_id)
-# → {
-#     "hierarchical": { "final_answer": "...", "confidence": 0.87, "latency_ms": 3200 },
-#     "p2p":          { "final_answer": "...", "confidence": 0.91, "latency_ms": 2100 },
-#     "winner":       "p2p",
-#     "delta_confidence": 0.04,
-#     "delta_latency_ms": 1100
-# }
-```
+Il s’agit d’un **modèle d’apprentissage supervisé** (pipeline ML de classification) entraîné à partir des données collectées lors de l’évaluation comparative des deux architectures.
 
 ---
+### **Signaux de décision utilisés**
+
+| Signal | Description | Exemple |
+|--------|------------|---------|
+| **Complexité de la requête** | Niveau de raisonnement requis | Multi-étapes → hiérarchique |
+| **Besoin de parallélisme** | Recherche multi-sources indépendantes | Exploration large → distribuée |
+| **Structure de la tâche** | Séquentiel vs collaboratif | Raisonnement logique → hiérarchique |
+| **Contraintes de latence** | Temps de réponse attendu | Question simple → distribuée |
+| **Patterns appris** | Historique des performances | Données expérimentales |
+
+---
+
+### **Mode d’évaluation scientifique**
+
+Dans le cadre de l’étude, le système peut également fonctionner en mode expérimental :
+
+- Les deux architectures sont exécutées sur les mêmes requêtes  
+- Les résultats sont comparés a posteriori  
+- Les métriques (latence, qualité, hallucination, score global) sont enregistrées  
+- Ces données servent à améliorer le modèle du Meta-Router  
+
+---
+
+###  **Point clé**
+
+Le Meta-Router ne représente pas une troisième architecture.  
+Il fait partie du même pipeline unifié et agit uniquement comme un **sélecteur intelligent entre deux architectures existantes**, basé sur un apprentissage supervisé.
+
+
 
 ## Les agents et leurs rôles
 
