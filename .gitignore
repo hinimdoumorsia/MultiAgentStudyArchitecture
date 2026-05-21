@@ -23,8 +23,6 @@ frontend/dist/
 *.swp
 
 # Ignore routing datasets
-dataset_routing.csv
-dataset_routing.xlsx
 
 # Virtual environments
 academic-mas/env_collect/
