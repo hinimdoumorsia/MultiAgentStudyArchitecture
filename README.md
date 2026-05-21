@@ -738,6 +738,13 @@ Pour toute question, collaboration, retour scientifique ou discussion autour du 
 
 Je reste ouvert aux échanges académiques, collaborations de recherche et discussions autour des systèmes multi-agents, des LLMs et de l’intelligence artificielle.
 
+## Article Scientifique
+
+L’article scientifique associé à ce projet est disponible ici :
+
+📄 https://drive.google.com/file/d/1g6c-XtSc2BTC71z2XeQZjtR5w92EpYwA/view?usp=sharing
+
+
 ## Licence
 
 MIT — Projet académique, usage libre avec attribution.
