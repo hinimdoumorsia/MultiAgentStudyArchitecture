@@ -1,6 +1,6 @@
 # AcademiMAS — Étude Comparative d'Architectures Multi-Agents pour l'Assistance Académique
 
-> Plateforme expérimentale de recherche basée sur **LangGraph**, **LLMs locaux et distants**, et **ChromaDB**, développée dans le cadre d’une étude scientifique visant à comparer deux paradigmes d’architectures multi-agents : **hiérarchique** et **distribuée (peer-to-peer)**.
+>Système d’étude expérimental basé sur **LangGraph**, **LLMs locaux et distants**, et **ChromaDB**, développé dans le cadre d’une étude scientifique visant à comparer deux paradigmes d’architectures multi-agents : **hiérarchique** et **distribuée (peer-to-peer)**.
 
 ---
 
