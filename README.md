@@ -142,35 +142,7 @@ Les deux architectures partagent **les mêmes agents** (même logique métier, m
 
 L'architecture hiérarchique repose sur un **orchestrateur central** (LangGraph `StateGraph`) qui contrôle explicitement le flux d'exécution des agents. Chaque décision — quel agent appeler, dans quel ordre, selon quelle condition — est prise par cet orchestrateur.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  COUCHE 1 — Orchestrateur (LangGraph StateGraph)             │
-│                                                              │
-│   ┌─────────────────┐    ┌──────────────────────────────┐   │
-│   │ Orchestrateur   │    │ Routeur dynamique            │   │
-│   │ central         │───▶│ Score confiance · Coût       │   │
-│   │ Coordination    │    │ Type requête · Charge ctx.   │   │
-│   └─────────────────┘    └──────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│  COUCHE 2 — Agents spécialisés                               │
-│                                                              │
-│  ┌────────────┐ ┌────────────┐ ┌──────────┐ ┌────────────┐  │
-│  │ Planning   │ │ RAG        │ │ Tools    │ │Verification│  │
-│  │ Agent      │ │ Agent      │ │ Agent    │ │ Agent      │  │
-│  └────────────┘ └────────────┘ └──────────┘ └────────────┘  │
-│        ←─────────── État partagé AcademicState ─────────────→│
-└─────────────────────────────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│  COUCHE 3 — Synthèse finale                                  │
-│                  ┌──────────────┐                            │
-│                  │ Synthesis    │                            │
-│                  │ Agent        │                            │
-│                  └──────────────┘                            │
-└─────────────────────────────────────────────────────────────┘
-```
+![Architecture hiérarchique](academic-mas/images/hierarchique.png)
 
 ### Flux d'exécution
 
@@ -206,27 +178,7 @@ Les crochets `[]` indiquent les agents activés conditionnellement par le routeu
 
 L'architecture distribuée supprime l'orchestrateur central. Les agents sont **autonomes** et réagissent à des **événements** publiés sur un bus partagé (`EventBus`). Chaque agent s'abonne aux événements qui le concernent et publie son résultat comme un nouvel événement.
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│  EventBus (singleton thread-safe)                            │
-│                                                              │
-│  QUERY_RECEIVED ──▶ PlanningAgent ──▶ PLAN_CREATED           │
-│                                           │                  │
-│                           ┌───────────────┴──────────┐       │
-│                           ▼                          ▼       │
-│                       RAGAgent               ToolsAgent      │
-│                    DOCUMENTS_FOUND         TOOL_EXECUTED      │
-│                           │                          │       │
-│                           └───────────────┬──────────┘       │
-│                                           ▼                  │
-│                                  VerificationAgent           │
-│                                  VERIFICATION_DONE           │
-│                                           │                  │
-│                                           ▼                  │
-│                                    SynthesisAgent            │
-│                                    SYNTHESIS_DONE            │
-└──────────────────────────────────────────────────────────────┘
-```
+![Architecture distribuée](academic-mas/images/distributer.png)
 
 ### Types d'événements
 
