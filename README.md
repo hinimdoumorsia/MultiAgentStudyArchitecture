@@ -1,7 +1,88 @@
 # AcademiMAS — Étude Comparative d'Architectures Multi-Agents pour l'Assistance Académique
 
-> Système de recherche expérimental basé sur **LangGraph**, **Claude (Anthropic)** et **ChromaDB**, conçu pour mener une étude scientifique rigoureuse sur deux paradigmes d'architecture agentique : **hiérarchique** et **distribuée peer-to-peer**.
+>Système d’étude expérimental basé sur **LangGraph**, **LLMs locaux et distants**, et **ChromaDB**, développé dans le cadre d’une étude scientifique visant à comparer deux paradigmes d’architectures multi-agents : **hiérarchique** et **distribuée (peer-to-peer)**.
 
+---
+
+##  **Introduction**
+
+Dans le cadre de ce projet de recherche, nous avons conçu et implémenté deux architectures multi-agents complètes afin d’étudier leurs performances dans un contexte d’assistance académique intelligente.
+
+L’objectif est de réaliser une **étude expérimentale comparative rigoureuse** entre deux approches :
+
+- une architecture **hiérarchique**, pilotée par un orchestrateur central,
+- une architecture **distribuée**, basée sur la collaboration entre agents sans point de contrôle unique.
+
+Les deux systèmes utilisent les mêmes modèles de langage (LLMs locaux et via API), les mêmes prompts, ainsi que les mêmes agents afin de garantir une comparaison équitable et scientifique.
+
+---
+
+##  Agents communs aux deux architectures
+
+Les deux architectures étudiées reposent sur un ensemble **identique d’agents spécialisés**, afin de garantir une comparaison équitable et scientifiquement rigoureuse entre l’approche hiérarchique et l’approche distribuée.
+
+Les agents utilisés dans les deux systèmes sont :
+
+- **PlanningAgent**
+- **RAGAgent**
+- **ToolsAgent**
+- **VerificationAgent**
+- **SynthesisAgent**
+
+Ainsi, la différence entre les deux architectures ne réside pas dans les agents eux-mêmes, mais uniquement dans leur **mode d’orchestration et de coordination**. Cette conception permet d’isoler l’impact de l’architecture sur les performances globales du système.
+
+
+##  Resources
+
+Afin de pouvoir réaliser ce travail dans de bonnes conditions, nous avons constitué et utilisé plusieurs ressources essentielles dans le cadre de cette étude comparative.
+
+###  Dataset d’évaluation
+
+Un ensemble de **160 questions** de différents types et catégories a été collecté et utilisé pour évaluer les deux architectures (hiérarchique et distribuée).  
+Chaque question est injectée dans les deux systèmes afin de produire **deux sorties distinctes**, permettant une comparaison directe.
+
+###  Données collectées
+
+Pour chaque requête, plusieurs métriques ont été enregistrées afin d’analyser finement les performances des systèmes :
+
+- `question_id`
+- `timestamp`
+- `question_raw`
+- `question_length`
+- `nb_mots`
+- `domaine_detecte`
+- `type_question`
+- `temps_ms`
+- `tokens_total`
+- `tokens_prompt`
+- `tokens_completion`
+- `nb_agents`
+- `nb_outils`
+- `reponse`
+- `score_hallucination`
+- `score_outils`
+- `score_qualite`
+- `score_global`
+- `notes_annotateur`
+
+Ces données permettent d’évaluer les systèmes selon plusieurs dimensions : **performance temporelle**, **coût en tokens**, **qualité des réponses**, et **niveau d’hallucination des modèles**.
+
+### Liens des ressources
+
+- Questions d’étude :  
+  https://drive.google.com/file/d/1KxcRF8VK9NqW_yjPUW-WgKlcsN5eL6b4/view?usp=drive_link
+
+- Dataset architecture hiérarchique :  
+  https://drive.google.com/file/d/1dcOwou6JVUA68kl5kPCj0jiz2jEOUPop/view?usp=drive_link
+
+- Dataset architecture distribuée :  
+  https://drive.google.com/file/d/1HHVlSkyogRWjRE2g1GrIuNCG4xcSZ1sb/view?usp=drive_link
+
+- Notebook du travail :  
+  https://drive.google.com/file/d/1FDWvlUyVW47MFLkkxf3gtsI1Q7Rd7Zs3/view?usp=drive_link
+
+- Meilleur modèle retenu :  
+  https://drive.google.com/file/d/1WbaPRPV0YPI0Ex_daTexzFJF0g5arV27/view?usp=drive_link
 ---
 
 ## Table des matières
@@ -22,25 +103,29 @@
 
 ---
 
-## Objectif de recherche
+##  **Objectif de recherche**
 
-AcademiMAS est avant tout un **banc d'essai scientifique**. Son but ultime est de produire un **article de recherche** répondant à la question suivante :
+AcademiMAS est avant tout un **banc d’essai scientifique**. Son objectif est de produire un **article de recherche** répondant à la question suivante :
 
-> *Pour un ensemble de questions académiques données, quelle architecture multi-agents — hiérarchique centralisée ou distribuée peer-to-peer — produit les réponses les plus précises, les plus cohérentes et dans les délais les plus raisonnables ?*
+> *Pour un ensemble de questions  données, quelle architecture multi-agents — hiérarchique  ou distribuée peer-to-peer — produit les réponses les plus précises, les plus cohérentes et dans les délais les plus raisonnables ?*
 
-Pour répondre à cette question, le système implémente les deux architectures en parallèle et les soumet aux mêmes requêtes, collecte des métriques comparables (latence, score de confiance, qualité, taux d'échec), et expose un **routeur méta-architectural** capable de prédire dynamiquement quelle architecture est la mieux adaptée à chaque type de question.
+Pour répondre à cette question, le système implémente **deux architectures uniquement** (hiérarchique et distribuée), exécutées en parallèle sur les mêmes requêtes afin de garantir une comparaison équitable. Les performances sont ensuite analysées à l’aide de métriques quantitatives et qualitatives.
 
-### Questions de recherche principales
+###  **Question centrale de l’étude** ❓
+
+> *Peut-on prédire directement, à partir de la requête utilisateur, quelle architecture (hiérarchique ou distribuée) produira la meilleure réponse, en utilisant un modèle d’apprentissage supervisé ?*
+
+Cette question vise à évaluer la possibilité de construire un **modèle de routage intelligent** capable de sélectionner dynamiquement l’architecture optimale en fonction des caractéristiques de la requête.
+
+### **Questions de recherche principales**
 
 | # | Question | Métriques clés |
 |---|---|---|
 | Q1 | Quelle architecture offre la meilleure qualité de réponse ? | `confidence_score`, `quality_score` |
-| Q2 | Quelle architecture est la plus rapide sur des questions simples ? complexes ? | `total_latency_ms` par complexité |
-| Q3 | Quelle architecture est la plus robuste aux erreurs ? | `taux d'échec`, `errors` |
-| Q4 | Le routeur méta-architectural prédit-il correctement l'architecture optimale ? | `accuracy` du Meta-Router |
-| Q5 | Les patterns de routage sont-ils stables et reproductibles ? | variance sur N requêtes identiques |
-
----
+| Q2 | Quelle architecture est la plus rapide selon les types de questions ? | `total_latency_ms`, complexité de la requête |
+| Q3 | Quelle architecture est la plus robuste face aux erreurs ? | `taux_d_echec`, erreurs |
+| Q4 | Le routeur méta-architectural prédit-il correctement l’architecture optimale ? | `accuracy` du Meta-Router |
+| Q5 | Les décisions de routage sont-elles stables et reproductibles ? | variance sur N requêtes identiques |
 
 ## Vue d'ensemble du système
 
