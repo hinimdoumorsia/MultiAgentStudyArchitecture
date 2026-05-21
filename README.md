@@ -31,6 +31,58 @@ Les agents utilisés dans les deux systèmes sont :
 
 Ainsi, la différence entre les deux architectures ne réside pas dans les agents eux-mêmes, mais uniquement dans leur **mode d’orchestration et de coordination**. Cette conception permet d’isoler l’impact de l’architecture sur les performances globales du système.
 
+
+##  Resources
+
+Afin de pouvoir réaliser ce travail dans de bonnes conditions, nous avons constitué et utilisé plusieurs ressources essentielles dans le cadre de cette étude comparative.
+
+###  Dataset d’évaluation
+
+Un ensemble de **160 questions** de différents types et catégories a été collecté et utilisé pour évaluer les deux architectures (hiérarchique et distribuée).  
+Chaque question est injectée dans les deux systèmes afin de produire **deux sorties distinctes**, permettant une comparaison directe.
+
+###  Données collectées
+
+Pour chaque requête, plusieurs métriques ont été enregistrées afin d’analyser finement les performances des systèmes :
+
+- `question_id`
+- `timestamp`
+- `question_raw`
+- `question_length`
+- `nb_mots`
+- `domaine_detecte`
+- `type_question`
+- `temps_ms`
+- `tokens_total`
+- `tokens_prompt`
+- `tokens_completion`
+- `nb_agents`
+- `nb_outils`
+- `reponse`
+- `score_hallucination`
+- `score_outils`
+- `score_qualite`
+- `score_global`
+- `notes_annotateur`
+
+Ces données permettent d’évaluer les systèmes selon plusieurs dimensions : **performance temporelle**, **coût en tokens**, **qualité des réponses**, et **niveau d’hallucination des modèles**.
+
+### Liens des ressources
+
+- Questions d’étude :  
+  https://drive.google.com/file/d/1KxcRF8VK9NqW_yjPUW-WgKlcsN5eL6b4/view?usp=drive_link
+
+- Dataset architecture hiérarchique :  
+  https://drive.google.com/file/d/1dcOwou6JVUA68kl5kPCj0jiz2jEOUPop/view?usp=drive_link
+
+- Dataset architecture distribuée :  
+  https://drive.google.com/file/d/1HHVlSkyogRWjRE2g1GrIuNCG4xcSZ1sb/view?usp=drive_link
+
+- Notebook du travail :  
+  https://drive.google.com/file/d/1FDWvlUyVW47MFLkkxf3gtsI1Q7Rd7Zs3/view?usp=drive_link
+
+- Meilleur modèle retenu :  
+  https://drive.google.com/file/d/1WbaPRPV0YPI0Ex_daTexzFJF0g5arV27/view?usp=drive_link
 ---
 
 ## Table des matières
