@@ -130,25 +130,7 @@ Cette question vise à évaluer la possibilité de construire un **modèle de ro
 ## Vue d'ensemble du système
 
 ```
-                    ┌─────────────────────┐
-                    │   Requête entrante   │
-                    └──────────┬──────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │    Meta-Router       │
-                    │  (prédit l'archi.)   │
-                    └──────┬──────┬───────┘
-                           │      │
-          ┌────────────────▼─┐  ┌─▼────────────────┐
-          │  Architecture    │  │  Architecture     │
-          │  Hiérarchique    │  │  Distribuée P2P   │
-          │  (LangGraph)     │  │  (EventBus)       │
-          └────────────────┬─┘  └─┬────────────────┘
-                           │      │
-                    ┌──────▼──────▼──────┐
-                    │  Réponse + Métriques│
-                    │  (stockage SQLite)  │
-                    └─────────────────────┘
+ ![Architecture du système](images/architecturecomplet.png)
 ```
 
 Les deux architectures partagent **les mêmes agents** (même logique métier, même code `process()`). Seule la **topologie de coordination** diffère. Cela garantit que les différences observées sont imputables à l'architecture, pas aux modèles ou aux prompts.
