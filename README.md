@@ -716,6 +716,21 @@ academic-mas/
 ```
 
 ---
+## Contact
+
+Pour toute question, collaboration, retour scientifique ou discussion autour du projet, vous pouvez me contacter via les plateformes suivantes :
+
+- LinkedIn :  
+  linkedin.com/in/morsia-guitdam-hinimdou-266bb0269
+
+- Portfolio :  
+  site-web-nodemailer.vercel.app
+
+- GitHub :  
+  https://github.com/hinimdoumorsia?tab=repositories
+---
+
+Je reste ouvert aux échanges académiques, collaborations de recherche et discussions autour des systèmes multi-agents, des LLMs et de l’intelligence artificielle.
 
 ## Licence
 
