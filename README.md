@@ -745,6 +745,9 @@ L’article scientifique associé à ce projet est disponible ici :
 📄 https://drive.google.com/file/d/1g6c-XtSc2BTC71z2XeQZjtR5w92EpYwA/view?usp=sharing
 
 
+Pour une vue globale du projet et de sa documentation complète, veuillez consulter :
+
+👉 https://multiagentstudyarchitecture.readthedocs.io/en/latest/
 ## Licence
 
 MIT — Projet académique, usage libre avec attribution.
