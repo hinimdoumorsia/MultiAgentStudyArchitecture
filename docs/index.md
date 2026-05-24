@@ -1,3 +1,40 @@
+# 👋 **Bienvenue sur la documentation de mon projet métier**
+
+Bienvenue dans la documentation du projet :
+
+**Orchestrateur multi-agents adaptatif pour l’assistance académique**
+
+---
+
+## **Informations générales**
+
+- **Réalisé par :** Hinimdou Morsia Guitdam  
+- **Encadré par :** Professeur Hajji Tarik  
+- **École :** École Nationale Supérieure d’Arts et Métiers de Meknès (ENSAM)  
+- **Filière :** Intelligence Artificielle et Technologies des Données  
+- **Année :** 4ème année
+
+---
+
+## **Domaine du projet**
+
+**Architecture agentique et systèmes multi-agents**
+
+---
+
+## **Description rapide**
+
+Ce projet propose une architecture multi-agents capable de répartir intelligemment des tâches complexes entre plusieurs agents spécialisés, en comparant deux approches principales :
+
+- architecture hiérarchique (chef d’orchestre)
+- architecture distribuée (peer-to-peer)
+
+avec un mécanisme de **routage dynamique basé sur le type de requête et la qualité attendue**.
+
+---
+
+
+
 # Table des matières
 
 ## 1. [Introduction](introduction.md)
