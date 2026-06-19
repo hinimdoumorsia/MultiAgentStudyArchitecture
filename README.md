@@ -742,7 +742,7 @@ Je reste ouvert aux échanges académiques, collaborations de recherche et discu
 
 L’article scientifique associé à ce projet est disponible ici :
 
-📄 https://drive.google.com/file/d/1g6c-XtSc2BTC71z2XeQZjtR5w92EpYwA/view?usp=sharing
+📄 [https://drive.google.com/file/d/1g6c-XtSc2BTC71z2XeQZjtR5w92EpYwA/view?usp=sharing](https://drive.google.com/file/d/1xRGVZdXtnT1atzaLlkz4KEUfFD65pknE/view?usp=sharing)
 
 
 Pour une vue globale du projet et de sa documentation complète, veuillez consulter :
