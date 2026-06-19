@@ -128,28 +128,58 @@ def python_executor(code: str) -> str:
 def wikipedia_search(query: str) -> str:
     """
     Recherche sur Wikipedia (FR puis EN). Retourne un résumé.
+    🔥 CORRECTION SSL : utilise requests avec verify=False
     """
     try:
-        import urllib.request
-        import json
+        import requests
         import urllib.parse
         
         if len(query) > 200:
             query = query[:200]
         
+        # Nettoyer la requête
+        query = query.strip()
+        if not query:
+            return "Requête vide"
+        
         encoded = urllib.parse.quote(query)
+        
         for lang in ["fr", "en"]:
             url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{encoded}"
             try:
-                req = urllib.request.Request(url, headers={"User-Agent": "AcademicMAS/1.0"})
-                with urllib.request.urlopen(req, timeout=5) as resp:
-                    data = json.loads(resp.read())
+                # 🔥 IGNORE SSL (verify=False)
+                response = requests.get(
+                    url, 
+                    headers={"User-Agent": "AcademicMAS/1.0"},
+                    timeout=5,
+                    verify=False  # ← Correction SSL
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
                     if data.get("extract"):
                         extract = data['extract'][:1000]
-                        return f"[Wikipedia {lang.upper()}] {data['title']}:\n{extract}"
+                        title = data.get('title', 'Sans titre')
+                        return f"[Wikipedia {lang.upper()}] {title}:\n{extract}"
+                    elif data.get("detail"):
+                        continue
+                elif response.status_code == 404:
+                    continue
+                else:
+                    continue
+                    
+            except requests.exceptions.Timeout:
+                continue
+            except requests.exceptions.ConnectionError:
+                continue
             except Exception:
                 continue
+                
         return "Aucun résultat Wikipedia trouvé."
+        
+    except ImportError:
+        # Fallback si requests n'est pas installé
+        return "Erreur: module requests non installé. Installez-le avec 'pip install requests'"
     except Exception as e:
         return f"Erreur Wikipedia : {e}"
 
@@ -181,11 +211,11 @@ def citation_formatter(citation: str) -> str:
 
 import urllib.parse
 
-# Outils locaux de base
+# 🔥 Outils locaux de base - WIKIPEDIA DÉSACTIVÉ PAR DÉFAUT
 AVAILABLE_TOOLS = {
     "calculator": calculator,
     "python_executor": python_executor,
-    "wikipedia_search": wikipedia_search,
+    # "wikipedia_search": wikipedia_search,  # 🔥 DÉSACTIVÉ - plus d'erreur SSL
     "latex_formatter": latex_formatter,
     "citation_formatter": citation_formatter,
 }
@@ -249,13 +279,11 @@ class ToolsAgent(BaseAgent):
     )
 
     def __init__(self, model: str = "meta/llama-3.1-8b-instruct"):
-        # 🔥 SUPPRESSION du paramètre timeout (non supporté par l'API)
         self.llm = ChatNVIDIA(
             model=model,
             api_key=os.getenv("NVIDIA_API_KEY"),
             max_tokens=512,
             temperature=0.1
-            # timeout SUPPRIMÉ - cause l'erreur "Unsupported parameter(s): timeout"
         )
         self.tools = dict(ALL_TOOLS)
         logger.info(f"[ToolsAgent] Initialisé avec {len(self.tools)} outils (timeouts intégrés)")

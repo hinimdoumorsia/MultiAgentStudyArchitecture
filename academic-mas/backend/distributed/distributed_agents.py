@@ -221,10 +221,10 @@ class DistributedPlanningAgent(DistributedAgentWrapper):
 
 class DistributedRAGAgent(DistributedAgentWrapper):
     """
-    Déclenché par : PLAN_CREATED
+    Déclenché par : QUERY_RECEIVED (Parallèle)
     Publie        : DOCUMENTS_FOUND
     """
-    trigger_events = [EventType.PLAN_CREATED]
+    trigger_events = [EventType.QUERY_RECEIVED]
     output_event   = EventType.DOCUMENTS_FOUND
 
     def _extract_payload(self, result: Dict, state: Dict) -> Dict:
@@ -236,10 +236,10 @@ class DistributedRAGAgent(DistributedAgentWrapper):
 
 class DistributedToolsAgent(DistributedAgentWrapper):
     """
-    Déclenché par : PLAN_CREATED et DOCUMENTS_FOUND
+    Déclenché par : QUERY_RECEIVED (Parallèle)
     Publie        : TOOL_EXECUTED
     """
-    trigger_events = [EventType.PLAN_CREATED, EventType.DOCUMENTS_FOUND]
+    trigger_events = [EventType.QUERY_RECEIVED]
     output_event   = EventType.TOOL_EXECUTED
 
     def _extract_payload(self, result: Dict, state: Dict) -> Dict:
@@ -251,10 +251,11 @@ class DistributedToolsAgent(DistributedAgentWrapper):
 
 class DistributedVerificationAgent(DistributedAgentWrapper):
     """
-    Déclenché par : TOOL_EXECUTED
+    Déclenché par : DOCUMENTS_FOUND ou TOOL_EXECUTED
     Publie        : VERIFICATION_DONE
+    Agit comme un coordinateur intermédiaire pour valider les données.
     """
-    trigger_events = [EventType.TOOL_EXECUTED]
+    trigger_events = [EventType.DOCUMENTS_FOUND, EventType.TOOL_EXECUTED]
     output_event   = EventType.VERIFICATION_DONE
 
     def _extract_payload(self, result: Dict, state: Dict) -> Dict:
@@ -266,10 +267,11 @@ class DistributedVerificationAgent(DistributedAgentWrapper):
 
 class DistributedSynthesisAgent(DistributedAgentWrapper):
     """
-    Déclenché par : VERIFICATION_DONE
+    Déclenché par : VERIFICATION_DONE ou ERROR
     Publie        : SYNTHESIS_DONE
+    Coordinateur final : agrège tout ce qui est disponible au moment T.
     """
-    trigger_events = [EventType.VERIFICATION_DONE]
+    trigger_events = [EventType.VERIFICATION_DONE, EventType.ERROR]
     output_event   = EventType.SYNTHESIS_DONE
 
     def _extract_payload(self, result: Dict, state: Dict) -> Dict:

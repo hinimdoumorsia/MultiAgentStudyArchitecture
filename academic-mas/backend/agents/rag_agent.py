@@ -4,6 +4,7 @@ RAGAgent — Couche 2, Agent 2
 Rôle : recherche vectorielle dans une base de documents académiques.
 Utilise ChromaDB (local, persistant) + Groq LLM.
 Protocole A2A : reçoit le plan de PlanningAgent via l'état partagé.
+🔥 CORRECTIF : Utilise la mémoire persistante SQLite pour les questions d'identité
 """
 
 from typing import Dict, Any, List
@@ -16,6 +17,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from backend.agents.base import BaseAgent
 from backend.state import AcademicState
+from backend.memory.memory_manager import memory_manager
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +25,10 @@ SYSTEM_PROMPT = """Tu es un agent de recherche documentaire académique (RAG).
 Tu reçois une question et un contexte optionnel de documents.
 Synthétise les informations pertinentes trouvées pour répondre à la question.
 Si aucun document n'est disponible, indique-le clairement et propose une réponse basée sur tes connaissances.
-Sois précis, cite tes sources quand disponibles, et reste factuel."""
+Sois précis, cite tes sources quand disponibles, et reste factuel.
+
+🔥 RÈGLE IMPÉRATIVE : Si la question demande le nom de l'utilisateur, utilise le nom depuis la base de données.
+"""
 
 
 class RAGAgent(BaseAgent):
@@ -34,7 +39,6 @@ class RAGAgent(BaseAgent):
     )
 
     def __init__(self, model: str = "llama-3.1-8b-instant"):
-        # 🔥 Utilisation de Groq (disponible et fonctionnel)
         self.llm = ChatGroq(
             model=model,
             api_key=os.getenv("GROQ_API_KEY"),
@@ -99,9 +103,48 @@ class RAGAgent(BaseAgent):
         """Réponse simple sans appel LLM (quand ChromaDB est indisponible)"""
         return f"Je n'ai pas pu accéder à la base documentaire. Pour répondre à '{query}', veuillez vérifier que ChromaDB est correctement installé et que des documents sont indexés."
 
+    def _get_user_info_from_db(self, session_id: str) -> Dict:
+        """🔥 Récupère les informations utilisateur depuis SQLite"""
+        try:
+            prefs = memory_manager.persistent.get_preferences(session_id)
+            if prefs:
+                return prefs
+        except Exception as e:
+            logger.warning(f"[RAGAgent] Erreur récupération SQLite: {e}")
+        return {}
+
     def process(self, state: AcademicState) -> Dict[str, Any]:
         query = state["user_query"]
+        session_id = state.get("session_id", "")
         plan = state.get("plan", "")
+        user_name = state.get("user_name")
+
+        # 🔥 Récupérer depuis SQLite si pas dans state
+        if not user_name and session_id:
+            user_info = self._get_user_info_from_db(session_id)
+            user_name = user_info.get("nom") or user_info.get("name")
+
+        # ── Règle d'Or : Court-circuit RAG pour l'identité ─────────────
+        identity_keywords = [
+            "comment je m'appelle", "quel est mon nom", "c'est quoi mon nom",
+            "mon nom", "je m'appelle", "me nomme", "qui suis", "ma profession",
+            "mon métier", "que fais", "dans la vie", "qui je suis",
+            "rappelle moi mon nom", "donne moi mon nom", "tu m'appel"
+        ]
+        
+        if any(kw in query.lower() for kw in identity_keywords):
+            logger.info(f"[{self.name}] Requête d'identité détectée. Saut de la recherche vectorielle.")
+            if user_name:
+                content = f"🎯 Vous vous appelez **{user_name}** !"
+                return {
+                    "retrieved_docs": f"{content} (Extraction mémoire instantanée)",
+                    "tokens": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+                }
+            else:
+                return {
+                    "retrieved_docs": "❓ Je ne connais pas encore votre nom. Dites-moi 'je m'appelle X', 'je me nomme X' ou 'mon nom est X'. (Extraction mémoire instantanée)",
+                    "tokens": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+                }
 
         # Gérer le cas où plan est None
         plan_text = plan if plan is not None else ""
@@ -145,7 +188,7 @@ class RAGAgent(BaseAgent):
             if docs else "\n\n📚 **Sources :** Connaissances générales (aucun document indexé)"
         )
 
-        # Calcul des tokens approximatif (Groq ne retourne pas toujours l'usage)
+        # Calcul des tokens approximatif
         response_content = response.content if response else "Réponse non disponible"
         tokens_data = {
             "prompt_tokens": len(prompt) // 4,

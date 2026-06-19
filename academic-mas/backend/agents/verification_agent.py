@@ -48,10 +48,18 @@ class VerificationAgent(BaseAgent):
         self.llm = ChatGroq(model=model, max_tokens=1024, temperature=0.1)
 
     def process(self, state: AcademicState) -> Dict[str, Any]:
-        # Attendre 2 secondes pour éviter rate limit
-        time.sleep(3)
         
         query = state["user_query"]
+
+        # ── Court-circuit pour l'identité ─────────────────────────────
+        if any(t in query.lower() for t in ["comment je m'appelle", "quel est mon nom"]):
+            return {
+                "verification_report": {"confidence_score": 1.0, "recommendation": "PROCEED", "verification_notes": "Identité validée localement."},
+                "tokens": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+            }
+
+        # Attendre 3 secondes pour éviter rate limit (uniquement pour RAG réel)
+        time.sleep(3)
         
         # 🔥 CORRECTION : Gérer les valeurs None
         plan = state.get("plan")

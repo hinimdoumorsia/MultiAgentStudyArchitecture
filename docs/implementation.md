@@ -86,6 +86,7 @@ class AcademicState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]  # Historique LangGraph
     user_query: str                                        # Question brute
     session_id: str                                        # Identifiant de session
+    user_name: Optional[str]                               # Stockage immédiat du nom (Règle d'Or #1)
 
     # ── Résultats des agents ───────────────────────────────────────────
     router_decision: Optional[RouterDecision]  # Décision du routeur interne

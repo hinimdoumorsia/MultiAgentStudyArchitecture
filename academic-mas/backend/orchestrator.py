@@ -1,13 +1,15 @@
 """
 Orchestrator — LangGraph StateGraph
 
-Construit le graphe d'exécution multi-agents de façon DYNAMIQUE :
-- Les nœuds sont ajoutés depuis le registry
-- Les edges conditionnels lisent la RouterDecision
-- Ajouter un agent = juste l'enregistrer, le graphe s'adapte
-
 Architecture hiérarchique :
-  router_node → planning → [rag, tools] → verification → synthesis → END
+  router_node → planning → rag → tools → verification → synthesis → END
+
+🔥 CORRECTIFS :
+- `user_name` extrait depuis la query AVANT d'entrer dans le graphe
+  et injecté dans le state initial → tous les agents y ont accès.
+- `_extract_and_store_preferences` appelé IMMÉDIATEMENT sur la query
+  entrante, avant même le premier nœud du graphe.
+- Le `session_context` fourni au router inclut le nom si connu.
 """
 
 import time
@@ -32,7 +34,6 @@ logger = logging.getLogger(__name__)
 
 
 def _register_default_agents():
-    """Register the default agent set. Call once at startup."""
     registry.register(PlanningAgent())
     registry.register(RAGAgent())
     registry.register(ToolsAgent())
@@ -42,60 +43,69 @@ def _register_default_agents():
 
 
 def _router_node(state: AcademicState) -> Dict[str, Any]:
-    """Entry node: computes routing decision."""
+    """
+    Entry node : calcule la décision de routage.
+    user_query et user_name ne sont JAMAIS modifiés ici.
+    """
+    current_query = state["user_query"]
     session_ctx = memory_manager.get_session_context(state["session_id"])
-    query = state["user_query"]
-    if session_ctx:
-        query = f"[Contexte session]\n{session_ctx}\n\n[Question actuelle]\n{query}"
 
-    decision = select_agents({**state, "user_query": query})
-    return {"router_decision": decision}
+    query_for_routing = current_query
+    if session_ctx:
+        query_for_routing = (
+            f"[Contexte session]\n{session_ctx}\n\n"
+            f"[Question actuelle]\n{current_query}"
+        )
+
+    decision = select_agents({**state, "user_query": query_for_routing})
+
+    return {
+        "router_decision": decision,
+        "session_context": session_ctx,
+        # user_query et user_name non retournés → inchangés dans le state
+    }
 
 
 def build_graph() -> StateGraph:
-    """
-    Build graph with NO iterative verification loop (fixé à 1 passage).
-    Structure: router → planning → rag → tools → verification → synthesis → END
-    """
     graph = StateGraph(AcademicState)
 
-    # Nodes
     graph.add_node("router", _router_node)
-    
-    # Register all agents
     for name, agent in registry.all_agents().items():
         graph.add_node(name, agent)
-    
     graph.add_node("skip", lambda s: {})
 
-    # Entry point
     graph.set_entry_point("router")
 
     agents = registry.list_agents()
-    
-    # router → planning
-    if "planning" in agents:
-        graph.add_edge("router", "planning")
-        prev = "planning"
-    else:
-        prev = "router"
 
-    # planning → rag
-    if "rag" in agents:
-        graph.add_edge(prev, "rag")
-        prev = "rag"
+    prev = "router"
+    for step in ["planning", "rag", "tools", "verification", "synthesis"]:
+        if step in agents:
+            graph.add_edge(prev, step)
+            prev = step
 
-    # rag → tools
-    if "tools" in agents:
-        graph.add_edge(prev, "tools")
-        prev = "tools"
+    graph.add_edge(prev if prev != "router" else "router", END) \
+        if prev == "router" else graph.add_edge("synthesis", END) \
+        if "synthesis" in agents else graph.add_edge(prev, END)
 
-    # tools → verification
-    if "verification" in agents:
-        graph.add_edge(prev, "verification")
-        prev = "verification"
+    return graph.compile()
 
-    # verification → synthesis → END (PAS DE BOUCLE)
+
+def build_graph() -> StateGraph:
+    graph = StateGraph(AcademicState)
+    graph.add_node("router", _router_node)
+    for name, agent in registry.all_agents().items():
+        graph.add_node(name, agent)
+    graph.add_node("skip", lambda s: {})
+    graph.set_entry_point("router")
+
+    agents = registry.list_agents()
+    prev = "router"
+    for step in ["planning", "rag", "tools", "verification"]:
+        if step in agents:
+            graph.add_edge(prev, step)
+            prev = step
+
     if "synthesis" in agents:
         graph.add_edge(prev, "synthesis")
         graph.add_edge("synthesis", END)
@@ -106,7 +116,6 @@ def build_graph() -> StateGraph:
 
 
 class AcademicOrchestrator:
-    """High-level interface to the multi-agent system."""
 
     def __init__(self):
         _register_default_agents()
@@ -118,39 +127,69 @@ class AcademicOrchestrator:
         run_id = str(uuid.uuid4())
         start = time.perf_counter()
 
-        # État initial avec toutes les valeurs en string, pas None
+        # ─────────────────────────────────────────────────────────────────
+        # 🔥 ÉTAPE 0 : Extraire le nom (et autres prefs) depuis la query
+        #    AVANT de construire le state initial.
+        #    Comme ça, si l'utilisateur dit "je me nomme X" dans ce tour,
+        #    le state contient déjà user_name=X pour tous les agents.
+        # ─────────────────────────────────────────────────────────────────
+        memory_manager._extract_and_store_preferences(session_id, query)
+        user_name = memory_manager.get_user_name(session_id)
+        if user_name:
+            logger.info(f"[Orchestrator] user_name résolu pour {session_id}: '{user_name}'")
+
         initial_state: AcademicState = {
             "messages": [HumanMessage(content=query)],
             "user_query": query,
             "session_id": session_id,
+            "session_context": "",
             "router_decision": None,
             "plan": None,
             "retrieved_docs": None,
-            "tool_results": "",  # string vide
+            "tool_results": "",
             "verification_report": None,
-            "final_answer": "",  # string vide au lieu de None
+            "final_answer": "",
             "agent_results": [],
             "total_latency_ms": 0.0,
             "run_id": run_id,
             "errors": [],
             "retry_count": 0,
             "iteration_count": 0,
+            # 🔥 user_name injecté ici — disponible pour TOUS les agents
+            "user_name": user_name,
         }
 
         try:
             final_state = self._graph.invoke(initial_state)
         except Exception as e:
             logger.error(f"[Orchestrator] Graph execution failed: {e}", exc_info=True)
-            final_state = {**initial_state, "errors": [str(e)], "final_answer": f"Erreur système : {e}"}
+            final_state = {
+                **initial_state,
+                "errors": [str(e)],
+                "final_answer": f"Erreur système : {e}",
+            }
 
         total_ms = (time.perf_counter() - start) * 1000
         final_state["total_latency_ms"] = round(total_ms, 2)
 
-        # Persist to memory
+        # Filet de sécurité : uniquement si aucune réponse produite
+        if not final_state.get("final_answer"):
+            triggers = [
+                "comment je m'appelle", "comment je me nomme",
+                "quel est mon nom", "c'est quoi mon nom",
+            ]
+            if any(t in query.lower() for t in triggers):
+                if user_name:
+                    final_state["final_answer"] = f"🎯 Vous vous appelez **{user_name}** !"
+                else:
+                    final_state["final_answer"] = (
+                        "Je ne connais pas encore votre nom. "
+                        "Dites-le moi avec 'je me nomme …' ou 'je m'appelle …'."
+                    )
+
+        # Persist
         agents_used = [r["agent_name"] for r in final_state.get("agent_results", [])]
-        verification = final_state.get("verification_report")
-        if verification is None:
-            verification = {}
+        verification = final_state.get("verification_report") or {}
         confidence = verification.get("confidence_score", 0.8)
 
         memory_manager.record(
@@ -179,7 +218,6 @@ class AcademicOrchestrator:
         }
 
     def rebuild_graph(self):
-        """Hot-reload graph after adding/removing agents from registry."""
         self._graph = build_graph()
         logger.info("[Orchestrator] Graph rebuilt.")
 

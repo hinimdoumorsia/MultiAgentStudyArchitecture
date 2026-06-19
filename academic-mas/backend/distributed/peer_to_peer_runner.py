@@ -32,7 +32,7 @@ from backend.distributed.distributed_agents import (
     DistributedSynthesisAgent,
 )
 
-TIMEOUT_SECONDS = 180
+TIMEOUT_SECONDS = 300  # Passage à 5 minutes pour plus de robustesse
 
 
 class PeerToPeerRunner:
